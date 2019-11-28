@@ -62,16 +62,11 @@ public class SetNet {
 			if(strLine.contains("=")){
 				String[] row = strLine.split(",");
 				temp.getTable().addRow(row);
-				int j=0;
-				for (;j < row.length; j++) {
-					if(row[j].contains("=true"))
-						break;
-				}
-				temp.getTable().duplicateLastRow();
-				temp.getTable().getLastRow()[j] = "false";
-				double prob = 1- temp.getTable().RowProb(temp.getTable().getLastRowIndex());
-				temp.getTable().getLastRow()[j+1] = ""+prob;
-				temp.getTable().iloc(temp.getTable().getLastRowIndex()-1)[j] = "true";
+//				int j=0;
+//				for (;j < row.length; j++) {
+//					if(row[j].contains("=true"))
+//						break;
+//				}
 			}
 
 			//			System.out.println("line:"+i);

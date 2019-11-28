@@ -28,9 +28,6 @@ public class Cpt {
 	public ArrayList<String> getHeaderColumns() {
 		return headerColumns;
 	}
-	public void setHeaderColumns(ArrayList<String> headerColumns) {
-		this.headerColumns = headerColumns;
-	}
 	public ArrayList<String[]> getTable() {
 		return this.table;
 	}
@@ -51,21 +48,18 @@ public class Cpt {
 	public String[] iloc(int i) {
 		return this.indexToRow.get(i);
 	}
-	
 	@Override
 	public String toString() {
 		StringBuilder SB = new StringBuilder();
 		for (int i = 0; i < this.headerColumns.size(); i++) {
-			SB.append(this.headerColumns.get(i));
-			SB.append('|');
+			SB.append(this.headerColumns.get(i) + '|');
 		}
 		SB.append("\n");
 		Iterator<String[]> iter = this.table.iterator(); 
         while (iter.hasNext()) {
         	String[] row = iter.next();
         	for (int i = 0; i < row.length; i++) {
-				SB.append(row[i]);
-				SB.append('|');
+				SB.append(row[i] + '|');
 			}
             SB.append("\n");
         } 

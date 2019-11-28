@@ -6,9 +6,11 @@ public class VariableElimination {
 	private String Q;
 	private ArrayList<String> E;
 	private PriorityQueue<String> JoinOrder;
-	
-	public VariableElimination(String request)
+	ArrayList<Factor> Factors;
+	private bayesianNet bn;
+	public VariableElimination(String request,bayesianNet bn)
 	{
+		this.bn = bn;
 		this.JoinOrder= new PriorityQueue<String>();
 		request = request.replace("P(", "");
 		String[] splitToInsertCalcOrder = request.split("\\),");
@@ -23,15 +25,23 @@ public class VariableElimination {
 		for (int i = 0; i < splitToInsert.length; i++) {
 			this.E.add(evidences[i]);
 		}
+		this.Factors = new ArrayList<Factor>();
+		for (int i = 0; i < bn.getNodesList().size(); i++) {
+			Factors.add(new Factor(bn.getNodesList().get(i)));
+		}		
 	}
 	public String toString() {
 		StringBuilder SB = new StringBuilder();
-        SB.append("Query:" + this.Q + "\nEvidence:");
-        for (int i = 0; i < this.E.size(); i++) {
+		SB.append("Query:" + this.Q + "\nEvidence:");
+		for (int i = 0; i < this.E.size(); i++) {
 			SB.append(this.E.get(i) + " ");
 		}
-        SB.append("\nOrder:");
-        SB.append(Arrays.toString(this.JoinOrder.toArray()));
-        return SB.substring(0);
+		SB.append("\nOrder:");
+		SB.append(Arrays.toString(this.JoinOrder.toArray()));
+		SB.append("\nFactors:\n");
+		for (int i = 0; i < this.Factors.size(); i++) {
+			SB.append(this.Factors.get(i).toString() + "\n");
+		}
+		return SB.substring(0);
 	}
 }

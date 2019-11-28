@@ -35,11 +35,20 @@ public class NBnode {
 	public ArrayList<NBnode> getParents() {
 		return parents;
 	}
-	
+	public String getLastValue() {
+		return this.values.get(this.values.size()-1);
+	}
 	@Override
 	public String toString() {
 		StringBuilder SB = new StringBuilder();
-        SB.append(this.getName() +"\nparents:");
+		SB.append(this.getName() +"\nvalues:");
+        boolean hasValues = false;
+        for (int i = 0; i < this.values.size(); i++) {
+        	hasValues = true;
+			SB.append(this.values.get(i) + ' ');
+		}
+        if (!hasValues) {SB.append("none");}
+        SB.append("\nparents:");
         boolean hasParents = false;
         for (int i = 0; i < this.parents.size(); i++) {
         	hasParents = true;

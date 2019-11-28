@@ -99,7 +99,7 @@ public class ProbRow {
 	}
 
     public ProbRow multiply(ProbRow otherRow, ArrayList<Variable> headers, ArrayList<Variable> otherHeaders) {
-        ArrayList<Variable> newHeaders = new ArrayList();
+        ArrayList<Variable> newHeaders = new ArrayList<Variable>();
         double newProb = this.PROB * otherRow.PROB;
         /**
          * Check if some headers appear more than one time
@@ -116,7 +116,7 @@ public class ProbRow {
          * Initialize all the values for the new table
          * and eliminate the columns that were superfluous
          */
-        ArrayList<String> newValues = new ArrayList();
+        ArrayList<String> newValues = new ArrayList<String>();
         for (Variable v : newHeaders) {
             String val;
             if (headers.contains(v) && !otherHeaders.contains(v)) {
