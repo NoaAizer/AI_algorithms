@@ -7,5 +7,4 @@ public class Factor {
 		this.table = new Cpt(c);
 	}
 	
-	
 }
