@@ -4,19 +4,19 @@ import java.util.Iterator;
 
 public class Cpt {
 
-	private int RowsNamber;
+	private int RowsNumber;
 	private HashMap<Integer,String[]>indexToRow;
 	private ArrayList<String> headerColumns;
 	private ArrayList<String[]> table;
 	
 	public Cpt() {
-		this.RowsNamber = 0;
+		this.RowsNumber = 0;
 		this.table = new ArrayList<String[]>();
 		this.headerColumns = new ArrayList<String>();
 		this.indexToRow = new HashMap<Integer,String[]>();
 	}
 	public Cpt(Cpt c) {
-		this.RowsNamber = c.RowsNamber;
+		this.RowsNumber = c.RowsNumber;
 		this.indexToRow = new HashMap<Integer,String[]>();
 		this.indexToRow.putAll(c.indexToRow);
 		this.headerColumns = new ArrayList<String>();
@@ -35,7 +35,7 @@ public class Cpt {
 		return this.table;
 	}
 	public int getRowsNumber() {
-		return this.RowsNamber;
+		return this.RowsNumber;
 	}
 	public String[] getLastRow() {
 		return this.iloc(this.getRowsNumber()-1);
@@ -46,23 +46,12 @@ public class Cpt {
 	public void addRow(String[] row) {
 		this.table.add(row);
 		this.indexToRow.put(this.getRowsNumber(),row);
-		this.RowsNamber++;
+		this.RowsNumber++;
 	}
 	public String[] iloc(int i) {
 		return this.indexToRow.get(i);
 	}
-	public void duplicateLastRow() {
-		String[] lastRow = this.iloc(this.getRowsNumber()-1);
-		String[] newRow = new String[lastRow.length];
-		for (int i = 0; i < newRow.length; i++) {
-			newRow[i] = lastRow[i];
-		}
-		this.addRow(newRow);
-	}
-	public double RowProb(int index) {
-		return Double.valueOf(this.iloc(index)[this.iloc(index).length-1]);
-	}
-
+	
 	@Override
 	public String toString() {
 		StringBuilder SB = new StringBuilder();
