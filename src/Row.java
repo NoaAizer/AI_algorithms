@@ -20,7 +20,7 @@ public class Row {
     probability = prob;
   }
   /**
-   * return a string that represent a row
+   * returns a string that represent a row
    */
   public String toString() {
     String rowString = "";
@@ -31,9 +31,9 @@ public class Row {
   }
   /**
    * copy constructor
-   * @param varString
-   * @param probability
-   * @return copy row
+   * @param varString represents the values of the row.
+   * @param probability the provability of the all row
+   * @return copy row a new row with the same values
    */
   public static Row copyRow(String varString, double probability) {
     ArrayList<String> varStrings = new ArrayList<String>(varString.length());

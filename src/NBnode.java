@@ -2,12 +2,15 @@ import java.util.ArrayList;
 
 public class NBnode {
 	private String name;
-	private ArrayList<String> values;
+	private ArrayList<String> values;//e.g True/False..
 	private Cpt table;
 	ArrayList<NBnode> parents = new ArrayList<NBnode>();
 	ArrayList<NBnode> childs = new ArrayList<NBnode>();
-	private int type;
-	
+	//private int type;
+	/**
+	 * Constructor
+	 * @param name represents the node name
+	 */
 	public NBnode(String name) {
 		this.name = name;
 		this.values = new ArrayList<String>();
@@ -15,29 +18,58 @@ public class NBnode {
 		this.childs = new ArrayList<NBnode>();
 		this.table = new Cpt();
 	}
-	
-	public int getType() {
-		return type;
-	}
+//	/**
+//	 * Type getter
+//	 * @return the type of the node
+//	 */
+//	public int getType() {
+//		return type;
+//	}
+	/**
+	 * Childs getter
+	 * @return a list with the node's childs.
+	 */
 	public ArrayList<NBnode> getChilds() {
 		return childs;
 	}
-
+/**
+ * Name getter
+ * @return the name of the node variable.
+ */
 	public String getName() {
 		return name;
 	}
+	/**
+	 * Cpt getter
+	 * @return a table represents the node.
+	 */
 	public Cpt getTable() {
 		return table;
 	}
+	/**
+	 * Values getter
+	 * @return the values the node has.
+	 */
 	public ArrayList<String> getValues() {
 		return values;
 	}
+	/**
+	 * Parents getter
+	 * @return the parents the node has.
+	 */
 	public ArrayList<NBnode> getParents() {
 		return parents;
 	}
+	/**
+	 * @return the last value in the values list of the node.
+	 */
 	public String getLastValue() {
 		return this.values.get(this.values.size()-1);
 	}
+	/**
+	 * returns a string that represnts the node:
+	 * name, values list, parents list, childs list and the cpt table of the node.
+	 */
 	@Override
 	public String toString() {
 		StringBuilder SB = new StringBuilder();

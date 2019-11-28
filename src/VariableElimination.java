@@ -3,11 +3,16 @@ import java.util.Arrays;
 import java.util.PriorityQueue;
 
 public class VariableElimination {
-	private String Q;
-	private ArrayList<String> E;
-	private PriorityQueue<String> JoinOrder;
+	private String Q;// the variable of the query
+	private ArrayList<String> E;// a list of the evidences
+	private PriorityQueue<String> JoinOrder;// the order of the joining
 	ArrayList<Factor> Factors;
 	private bayesianNet bn;
+	/**
+	 * Constructor
+	 * @param request represents a query.
+	 * @param bn represents the bayesian net of a given query.
+	 */
 	public VariableElimination(String request,bayesianNet bn)
 	{
 		this.bn = bn;

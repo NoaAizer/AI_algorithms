@@ -6,8 +6,9 @@ import java.io.InputStreamReader;
 public class SetNet {
 	private String pathFile;//"C:\\Users\\idsha\\eclipse-workspace\\Algoritmim_in_AI\\input.txt";
 	private bayesianNet bn=null;
-	/**
-	 * @param dataFile
+	/** 
+	 * Gets a file and creats a bayesian net with the data.
+	 * @param dataFile the given file
 	 */
 	public SetNet(String dataFile) {
 		this.pathFile = dataFile;
@@ -57,29 +58,32 @@ public class SetNet {
 						}
 					}
 					temp.getTable().getHeaderColumns().add(temp.getName());
+				}
+
+				if(strLine.contains("=")){
+					String[] row = strLine.split(",");
+					temp.getTable().addRow(row);
+					//				int j=0;
+					//				for (;j < row.length; j++) {
+					//					if(row[j].contains("=true"))
+					//						break;
+					//				}
+				}
+
+				//			System.out.println("line:"+i);
+				i++;
+				if(strLine.contains("Queries")) {break;}
+				//				br.close();
 			}
 
-			if(strLine.contains("=")){
-				String[] row = strLine.split(",");
-				temp.getTable().addRow(row);
-//				int j=0;
-//				for (;j < row.length; j++) {
-//					if(row[j].contains("=true"))
-//						break;
-//				}
-			}
-
-			//			System.out.println("line:"+i);
-			i++;
-			if(strLine.contains("Queries")) {break;}
-			//				br.close();
+		} catch (Exception e){
+			System.err.println("Error: " + e.getMessage());
 		}
-
-	} catch (Exception e){
-		System.err.println("Error: " + e.getMessage());
 	}
-}
-public bayesianNet getNet() {
-	return this.bn;
-}
+	/**
+	 * @return  the baysen net of a node
+	 */
+	public bayesianNet getNet() {
+		return this.bn;
+	}
 }

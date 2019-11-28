@@ -13,6 +13,10 @@ public class Factor{
 	private ArrayList<String> headerColumns;
 	private ArrayList<String[]> table;
 
+	/**
+	 * Constructor
+	 * @param n is the node we creates its factor.
+	 */
 	public Factor(NBnode n) {
 		this.id = Factor.ID;
 		Factor.ID++;
@@ -29,14 +33,15 @@ public class Factor{
 		this.headerColumns.addAll(n.getTable().getHeaderColumns());
 		this.table= new ArrayList<String[]>();
 		for (int r = 0; r < n.getTable().getRowsNumber(); r++) {//rows of cpt
-			int c=0;
-			LinkedList<Double> rowProbs = new LinkedList<Double>();
-			int indexToDuplicate = 0;
+			int col=0;
+			LinkedList<Double> rowProbs = new LinkedList<Double>(); // a list of the factor probabilities.
+			int indexToDuplicate = 0;// the index to which the row is duplicated
 			boolean firstEqualsSign = false;
-			String[] newRow = new String[n.getParents().size() + 2];
-			for (;c < n.getTable().iloc(r).length;) {//columns of cpt
+			for (;col < n.getTable().iloc(r).length;) {//columns of cpt
+				// the row has the parents values and the variable value with the probability.
+				String[] newRow = new String[n.getParents().size() + 2];
 				int k=indexToDuplicate;
-				int indexNextRow=c;
+				int indexNextRow=col;// the index which we start to write the new values of a duplicated row.
 				while(!n.getTable().iloc(r)[indexNextRow].contains(".") && indexNextRow < n.getTable().iloc(r).length) {// runs on r row
 					if(!n.getTable().iloc(r)[indexNextRow].contains("=")) {
 						newRow[k] = n.getTable().iloc(r)[indexNextRow];
@@ -51,18 +56,25 @@ public class Factor{
 					indexNextRow++;
 					k++;
 				}
+				//adds a row with the same parent vaules but with a different value of the variable.
 				rowProbs.add(Double.valueOf(n.getTable().iloc(r)[indexNextRow]));
 				newRow[k] = n.getTable().iloc(r)[indexNextRow];
 				this.addRow(newRow);
-				c=indexNextRow+1;
+				col=indexNextRow+1;
 				newRow = duplicateStartOfRow(n,indexToDuplicate);
 			}
+			//adds a row with the last variable value (but the parents values are the same as the previous rows).
 			String[] lastRow = duplicateStartOfRow(n,indexToDuplicate);
 			lastRow[lastRow.length-2] = n.getLastValue();
 			lastRow[lastRow.length-1] = "" + (1 - sumOfProb(rowProbs));
 			this.addRow(lastRow);
 		}
 	}
+	/**
+	 * sum all the probabilities of the variable with the same parents values
+	 * @param probs represents the probabilities of the variable values.
+	 * @return
+	 */
 	private double sumOfProb(LinkedList<Double> probs) {
 		double answer = 0;
 		Iterator<Double> iter = probs.iterator();
@@ -71,27 +83,54 @@ public class Factor{
 		}
 		return answer;
 	}
+	/**
+	 * Adds a row to the table
+	 * @param row is the new row 
+	 */
 	public void addRow(String[] row) {
 		this.table.add(row);
 		this.indexToRow.put(this.RowsNumber,row);
 		this.RowsNumber++;
 	}
+	/**
+	 * Duplicate the start of the row for the rows that have the same parents values.
+	 * @param n represents the node.
+	 * @param index represents the indexToDuplicate.
+	 * @return the start of the duplicated row.
+	 */
 	public String[] duplicateStartOfRow(NBnode n ,int index){
 		String[] startNewRow = new String[n.getParents().size() + 2];
-		for (int k2 = 0; k2 < index; k2++) {
-			startNewRow[k2] = this.getLastRow()[k2];
+		for (int k = 0; k < index; k++) {
+			startNewRow[k] = this.getLastRow()[k];
 		}
 		return startNewRow;
 	}
+	/**
+	 * Returns a row of the cpt table by a given row index.
+	 * @param i
+	 * @return the i row of the table.
+	 */
 	public String[] iloc(int i) {
 		return this.indexToRow.get(i);
 	}
+	/**
+	 * @return the last row of the cpt table
+	 */
 	public String[] getLastRow() {
 		return this.iloc(this.RowsNumber-1);
 	}
+	/**
+	 * Returns the probability of a row by the index.
+	 * @param index represents the row's index.
+	 * @return the probability
+	 */
 	public double RowProb(int index) {
 		return Double.valueOf(this.iloc(index)[this.iloc(index).length-1]);
 	}
+	/**
+	 * Returns a string that represents the factor.
+	 * (with the factor name and  table).
+	 */
 	public String toString() {
 		StringBuilder SB = new StringBuilder();
 		SB.append("f"+this.id + "(" + this.name + ")\n");

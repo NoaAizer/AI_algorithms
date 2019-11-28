@@ -12,5 +12,6 @@ public class Main {
 		
 		VariableElimination ve = new VariableElimination("P(B=true|M=true,J=true),A-M",bn2);
 		System.out.println(ve.toString());
+
 	}
 }

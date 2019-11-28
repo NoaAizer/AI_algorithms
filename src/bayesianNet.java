@@ -6,6 +6,7 @@ public class bayesianNet {
 	private ArrayList<NBnode> nodesList;
 	
 	/**
+	 * constructor
 	 * @param name
 	 * @param nodesList
 	 */
@@ -13,13 +14,24 @@ public class bayesianNet {
 		this.name = name;
 		this.nodesList = new ArrayList<NBnode>();
 	}
+	/**
+	 * Name getter
+	 * @return the name of the bayesian net
+	 */
 	public String getName() {
 		return name;
 	}
-	
+	/**
+	 * Node list getter
+	 * @return a list of the nodes in the bayesian net
+	 */
 	public ArrayList<NBnode> getNodesList() {
 		return nodesList;
 	}
+	/**
+	 * return the bayesian network as a string with the name,
+	 * list of the variables and the details about each node.
+	 */
 	@Override
 	public String toString() {
         StringBuilder SB = new StringBuilder();
@@ -36,6 +48,11 @@ public class bayesianNet {
         } 
 		return SB.substring(0);
 	} 
+	/**
+	 * return the node by his name
+	 * @param name is the name of the requested node
+	 * @return the requested node 
+	 */
 	public NBnode getNodeByName(String name) {
 		ArrayList<NBnode> list = this.getNodesList();
 		int i=0;
