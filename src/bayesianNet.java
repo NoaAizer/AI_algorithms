@@ -23,21 +23,16 @@ public class bayesianNet {
 	@Override
 	public String toString() {
         StringBuilder SB = new StringBuilder();
-        SB.append("bayesianNet: ");
-        SB.append(this.getName());
-        SB.append("\nVariable:");
+        SB.append("bayesianNet: " + this.getName() + "\nVariable:");
         boolean hasVariables = false;
         for (int i = 0; i < this.nodesList.size(); i++) {
         	hasVariables = true;
-			SB.append(this.nodesList.get(i).getName());
-        	SB.append(' ');
+			SB.append(this.nodesList.get(i).getName() +' ');
 		}
-//        if (!hasVariables) {SB.append("none\n");}
         SB.append(hasVariables ? "\n" : "none\n");
         Iterator<NBnode> iter = this.getNodesList().iterator(); 
         while (iter.hasNext()) { 
-        	SB.append(iter.next().toString());
-            SB.append("\n");
+        	SB.append(iter.next().toString()+"\n");
         } 
 		return SB.substring(0);
 	} 

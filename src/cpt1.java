@@ -32,7 +32,7 @@ public class cpt1 {
 	
 	
 	
-	public cpt multiply(cpt other) {
+	public Cpt multiply(Cpt other) {
 		
 		ArrayList<String> productVariables = new ArrayList<String>();
 		ArrayList<Integer> productCardinalities = new ArrayList<Integer>();
@@ -79,7 +79,7 @@ public class cpt1 {
 			}
 		}
 		
-		cpt product = new cpt();
+		Cpt product = new Cpt();
 		product.setVariables(productVariables);
 		product.setCardinalities(productCardinalities);
 		product.setValues(productValues);
@@ -88,7 +88,7 @@ public class cpt1 {
 	}
 	
 	
-	public cpt marginalize(ArrayList<String> variablesToRemove) {
+	public Cpt marginalize(ArrayList<String> variablesToRemove) {
 		
 		ArrayList<String> marginalVariables = new ArrayList<String>();
 		ArrayList<Integer> marginalCardinalities = new ArrayList<Integer>();
@@ -112,7 +112,7 @@ public class cpt1 {
 			thisTotalRows *= this.cardinalities.get(i) ;
 		}
 		
-		cpt marginal = new cpt();
+		Cpt marginal = new Cpt();
 		marginal.setVariables(marginalVariables);
 		marginal.setCardinalities(marginalCardinalities);
 		

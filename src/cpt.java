@@ -2,24 +2,34 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class cpt {
-	public ArrayList<String> getHeaderColumns() {
-		return headerColumns;
-	}
-	public void setHeaderColumns(ArrayList<String> headerColumns) {
-		this.headerColumns = headerColumns;
-	}
+public class Cpt {
 
 	private int RowsNamber;
 	private HashMap<Integer,String[]>indexToRow;
 	private ArrayList<String> headerColumns;
 	private ArrayList<String[]> table;
 	
-	public cpt() {
+	public Cpt() {
 		this.RowsNamber = 0;
 		this.table = new ArrayList<String[]>();
 		this.headerColumns = new ArrayList<String>();
 		this.indexToRow = new HashMap<Integer,String[]>();
+	}
+	public Cpt(Cpt c) {
+		this.RowsNamber = c.RowsNamber;
+		this.indexToRow = new HashMap<Integer,String[]>();
+		this.indexToRow.putAll(c.indexToRow);
+		this.headerColumns = new ArrayList<String>();
+		this.headerColumns.addAll(c.headerColumns);
+		this.table = new ArrayList<String[]>();
+		this.table.addAll(c.table);
+		
+	}
+	public ArrayList<String> getHeaderColumns() {
+		return headerColumns;
+	}
+	public void setHeaderColumns(ArrayList<String> headerColumns) {
+		this.headerColumns = headerColumns;
 	}
 	public ArrayList<String[]> getTable() {
 		return this.table;
