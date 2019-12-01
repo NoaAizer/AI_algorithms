@@ -59,6 +59,7 @@ public class bayesianNet {
 		for (; i < list.size() && !list.get(i).getName().equals(name);) {
 			i++;
 		}
+		if(i==list.size()) {throw new RuntimeException("The name does't exsist in the bayseian network, got: "+name);}
 		return list.get(i);
 	}
 	

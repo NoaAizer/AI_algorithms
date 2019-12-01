@@ -2,9 +2,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 public class Factor{
-	public static int ID=1;
+	private   static int ID=1;
 
 	private int id;
 	private String name;
@@ -12,7 +15,7 @@ public class Factor{
 	private HashMap<Integer,String[]>indexToRow;
 	private ArrayList<String> headerColumns;
 	private ArrayList<String[]> table;
-
+	
 	/**
 	 * Constructor
 	 * @param n is the node we creates its factor.
@@ -126,6 +129,79 @@ public class Factor{
 	 */
 	public double RowProb(int index) {
 		return Double.valueOf(this.iloc(index)[this.iloc(index).length-1]);
+	}
+	/*
+	 * the size of the factor
+	 */
+	public int size() {
+		return this.table.size();
+	}
+	/**
+	 * 
+	 * @param where condition
+	 * @return new CPT table in accordance to the condition
+	 */
+	public void restrictFactor(ArrayList<String> conditions) {
+		ArrayList<String[]> result = new ArrayList<String[]>(); //(this.table);
+		int foundVar = 0;
+		ArrayList<String> headerColumns = this.headerColumns;
+		for (String condition : conditions) {
+			int varIndex = 0;
+			for (;varIndex < headerColumns.size() && !headerColumns.get(varIndex).equals(condition.substring(0,condition.indexOf("=")));) {
+				//finding the evidence column index
+				varIndex++;
+			}
+			if(varIndex < headerColumns.size()) {
+				foundVar++;
+				for (int i = 0; i < this.table.size(); i++) {
+					if(this.iloc(i)[varIndex].equals(condition.substring(condition.indexOf("=")+1))) {
+						//add only the row that uphold the specific evidence
+						result.add(this.iloc(i));
+					}
+				}
+			}
+		}
+		if(foundVar > 1) { // stay only the duplicated row
+			result = stayDuplicatedRow(result);
+		}
+		this.table = (result.size() == 0) ? this.table : result;
+//		for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext();) {
+//			String evidence = (String) iterator.next();
+//			removeEvidenceColumns(evidence);
+//		}
+	}
+//	private void removeEvidenceColumns(String evidence) {
+//		ArrayList<String> coulmns = this.headerColumns;
+//		for (Iterator<String> iterator = coulmns.iterator(); iterator.hasNext();) {
+//			int indexCol = 0;
+//			String col = (String) iterator.next();
+//			if(!col.equals(evidence)) {
+//				removeColumns(indexCol);
+//			}
+//			
+//		}
+//	}
+	/*
+	 * in case that we have more then 1 condition we need to save just the rows that uphold the all condition
+	 * @param table the result before the changes
+	 */
+	private ArrayList<String[]> stayDuplicatedRow(ArrayList<String[]> table) {
+		ArrayList<String[]> result = new ArrayList<String[]>();
+		Map<String[], Integer> nameAndCount = new HashMap<>();
+		// build hash table with count
+		for (String[] row : table) {
+			Integer count = nameAndCount.get(row);
+			if (count == null) { nameAndCount.put(row, 1); }
+			else { nameAndCount.put(row, ++count);}
+		} 
+		// Print duplicate elements from array in Java
+		Set<Entry<String[], Integer>> entrySet = nameAndCount.entrySet();
+		for (Entry<String[], Integer> entry : entrySet) {
+			if (entry.getValue() > 1) {
+				result.add(entry.getKey()); 
+			} 
+		} 
+		return result;
 	}
 	/**
 	 * Returns a string that represents the factor.
