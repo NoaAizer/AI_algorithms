@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
@@ -13,9 +14,26 @@ public class Factor{
 	private String name;
 	private int RowsNumber;
 	private HashMap<Integer,String[]>indexToRow;
-	private ArrayList<String> headerColumns;
+	private Set<String> headerColumns;
 	private ArrayList<String[]> table;
 	
+	
+	public ArrayList<String[]> getTable() {
+		return table;
+	}
+
+	public void setTable(ArrayList<String[]> table) {
+		for (Iterator<String[]> iterator = table.iterator(); iterator.hasNext();) {
+			String[] row = (String[]) iterator.next();
+			String[] copyRow = new String[row.length];
+			for (int j = 0; j < row.length; j++) {
+				copyRow[j] = row[j];
+			}
+			this.addRow(copyRow);
+		}
+		this.table = table;
+	}
+
 	/**
 	 * Constructor
 	 * @param n is the node we creates its factor.
@@ -32,7 +50,7 @@ public class Factor{
 		}
 		this.name = SB.substring(0);
 		this.indexToRow= new HashMap<Integer,String[]>();
-		this.headerColumns= new ArrayList<String>();
+		this.headerColumns= new HashSet<String>();
 		this.headerColumns.addAll(n.getTable().getHeaderColumns());
 		this.table= new ArrayList<String[]>();
 		for (int r = 0; r < n.getTable().getRowsNumber(); r++) {//rows of cpt
@@ -72,6 +90,29 @@ public class Factor{
 			lastRow[lastRow.length-1] = "" + (1 - sumOfProb(rowProbs));
 			this.addRow(lastRow);
 		}
+	}
+	
+	public Factor(Set<String> HeaderColumns) {
+		this.id = Factor.ID;
+		Factor.ID++;
+		StringBuilder SB = new StringBuilder();
+		if(HeaderColumns != null) {
+			for (Iterator<String> iterator = HeaderColumns.iterator(); iterator.hasNext();) {
+				SB.append((String) iterator.next() + ' ');
+			}
+		}
+		this.name = SB.substring(0);
+		this.indexToRow= new HashMap<Integer,String[]>();
+		this.headerColumns= new HashSet<String>(HeaderColumns);
+		this.table= new ArrayList<String[]>();
+	}
+
+	/**
+	 * Header Column getter
+	 * @return a list of the variables of the factor
+	 */
+	public Set<String> getHeaderColumns() {
+		return headerColumns;
 	}
 	/**
 	 * sum all the probabilities of the variable with the same parents values
@@ -144,10 +185,10 @@ public class Factor{
 	public void restrictFactor(ArrayList<String> conditions) {
 		ArrayList<String[]> result = new ArrayList<String[]>(); //(this.table);
 		int foundVar = 0;
-		ArrayList<String> headerColumns = this.headerColumns;
+		Set<String> headerColumns = this.headerColumns;
 		for (String condition : conditions) {
 			int varIndex = 0;
-			for (;varIndex < headerColumns.size() && !headerColumns.get(varIndex).equals(condition.substring(0,condition.indexOf("=")));) {
+			for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext() && !iterator.next().equals(condition.substring(0,condition.indexOf("=")));) {
 				//finding the evidence column index
 				varIndex++;
 			}
@@ -210,8 +251,8 @@ public class Factor{
 	public String toString() {
 		StringBuilder SB = new StringBuilder();
 		SB.append("f"+this.id + "(" + this.name + ")\n");
-		for (int i = 0; i < this.headerColumns.size(); i++) {
-			SB.append(this.headerColumns.get(i) + '|');
+		for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext();) {
+			SB.append((String) iterator.next() + '|');
 		}
 		SB.append("\n");
 		Iterator<String[]> iter = this.table.iterator(); 

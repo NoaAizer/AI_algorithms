@@ -23,6 +23,7 @@ public class Main {
 		
 		VariableElimination ve1 = new VariableElimination("P(B=true|J=true,M=true),A-E",bn1);
 		System.out.println(ve1.toString());
+//		ve1.start();
 
 	}
 }

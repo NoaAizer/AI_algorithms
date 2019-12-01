@@ -1,7 +1,10 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 public class VariableElimination {
 	private String Q;// the variable of the query
@@ -37,7 +40,7 @@ public class VariableElimination {
 			NBnode n = (NBnode) iterator.next(); //new NBnode ((NBnode) iterator.next(),this.E);
 			if(this.Q.contains(n.getName()) || isEvidence(n.getName()) || isAncestor(n)) {
 				//return true or false if we need to build for this node a factor
-				Factors.add(new Factor(n)); //new NBnode (n,this.E)));
+				Factors.add(new Factor(n));
 				this.lastFactor().restrictFactor(this.E);
 				if(this.lastFactor().size() <= 1) { //if the factor is just evidence
 					Factors.remove(this.lastFactor());
@@ -76,6 +79,92 @@ public class VariableElimination {
 	public Factor lastFactor() {
 		return Factors.get(Factors.size()-1);
 	}
+	
+//	public void start() {
+//		for (Iterator<String> iterator = this.JoinOrder.iterator(); iterator.hasNext();) {
+//			String hiddenVar = (String) iterator.next();
+//			joinAll(hiddenVar);
+////			eliminate(hiddenVar);
+//		}
+////		narm
+//	}
+//	public void joinAll() {
+//	       // To find the symmetric difference 
+//        Set<Integer> difference = new HashSet<Integer>(a); 
+//        difference.removeAll(b); 
+//        System.out.print("Difference of the two Set"); 
+//        System.out.println(difference); 
+//	}
+	private int getDiff(Factor factor1, Factor factor2) { //factor1 <= factor2
+		Set<String> difference = new HashSet<String>(factor1.getHeaderColumns()); 
+		difference.removeAll(factor2.getHeaderColumns()); 
+		return difference.size();
+	}
+	public Factor join(Factor factor1, Factor factor2) {
+        // To find union 
+        Set<String> unionHeaderColumns = new HashSet<String>(factor1.getHeaderColumns()); 
+        unionHeaderColumns.addAll(factor1.getHeaderColumns());
+		Factor returnFactor = new Factor(unionHeaderColumns);
+		if(getDiff(factor1,factor2) == 0) {
+			returnFactor.setTable(factor2.getTable());
+			
+		}
+		
+		return returnFactor;
+	}
+//	
+//	public static Factor sumout(Factor factor, String variable) {
+//		Integer position = factor.getPositionByVariable(variable);
+//		if (position == null) {
+//			return factor;
+//		}
+//		HashMap<String, Double> groupedMap = new HashMap<String, Double>();
+//		for (Row row : factor.getRowList()) {
+//			String key = "";
+//			for (int i = 0; i < row.ValuesList.size(); i++) {
+//				if (i != position) {
+//					key += row.ValuesList.get(i);
+//				}
+//			}
+//			Double probability = groupedMap.get(key);
+//			if (probability != null) {
+//				probability += row.probability;
+//			} else {
+//				probability = row.probability;
+//			}
+//			groupedMap.put(key, probability);
+//		}
+//
+//		ArrayList<String> variables = factor.getVarsArray();
+//		ArrayList<String> newVariables = new ArrayList<String>(variables.size() - 1);
+//		for (String v : variables) {
+//			if (!v.equals(variable)) {
+//				newVariables.add(v);
+//			}
+//		}
+//		Factor returnFactor = new Factor(newVariables);
+//		for (String key : groupedMap.keySet()) {
+//			Double val = groupedMap.get(key);
+//			Row newRow = Row.copyRow(key, val);
+//			returnFactor.addRow(newRow);
+//		}
+//
+//		return returnFactor;
+//	}
+//	
+//	public static Factor normalize(Factor1 factor) {
+//		Factor returnFactor = new Factor(factor.intToVariableNameMapping);
+//		double sum = 0;
+//		for (Row row : factor.rowList) {
+//			sum += row.probability;
+//		}
+//		for (Row row : factor.rowList) {
+//			returnFactor.addRow(new Row(row.ValuesList, row.probability / sum));
+//		}
+//		return returnFactor;
+//	}
+	
+	
 	public String toString() {
 		StringBuilder SB = new StringBuilder();
 		SB.append("Query:" + this.Q + "\nEvidence:");
