@@ -112,57 +112,60 @@ public class VariableElimination {
 		
 		return returnFactor;
 	}
-//	
-//	public static Factor sumout(Factor factor, String variable) {
-//		Integer position = factor.getPositionByVariable(variable);
-//		if (position == null) {
-//			return factor;
-//		}
-//		HashMap<String, Double> groupedMap = new HashMap<String, Double>();
-//		for (Row row : factor.getRowList()) {
-//			String key = "";
-//			for (int i = 0; i < row.ValuesList.size(); i++) {
-//				if (i != position) {
-//					key += row.ValuesList.get(i);
-//				}
-//			}
-//			Double probability = groupedMap.get(key);
-//			if (probability != null) {
-//				probability += row.probability;
-//			} else {
-//				probability = row.probability;
-//			}
-//			groupedMap.put(key, probability);
-//		}
-//
-//		ArrayList<String> variables = factor.getVarsArray();
-//		ArrayList<String> newVariables = new ArrayList<String>(variables.size() - 1);
-//		for (String v : variables) {
-//			if (!v.equals(variable)) {
-//				newVariables.add(v);
-//			}
-//		}
-//		Factor returnFactor = new Factor(newVariables);
-//		for (String key : groupedMap.keySet()) {
-//			Double val = groupedMap.get(key);
-//			Row newRow = Row.copyRow(key, val);
-//			returnFactor.addRow(newRow);
-//		}
-//
-//		return returnFactor;
-//	}
-//	
-//	public static Factor normalize(Factor1 factor) {
-//		Factor returnFactor = new Factor(factor.intToVariableNameMapping);
-//		double sum = 0;
-//		for (Row row : factor.rowList) {
-//			sum += row.probability;
-//		}
-//		for (Row row : factor.rowList) {
-//			returnFactor.addRow(new Row(row.ValuesList, row.probability / sum));
-//		}
-//		return returnFactor;
-//	}
+	
+	public static Factor sumout(Factor factor, String variable) {
+		int position = factor.getPositionByVariable(variable);
+		HashMap<String, Double> groupedMap = new HashMap<String, Double>();
+		for (String[] row : factor.getTable()) {
+			String key = "";
+			for (int i = 0; i < row.length; i++) {
+				if (i != position) {
+					key += row[i];
+				}
+			}
+			Double probability = groupedMap.get(key);
+			if (probability != null) {
+				probability += factor.RowProb(row);
+			} else {
+				probability = factor.RowProb(row);
+			}
+			groupedMap.put(key, probability);
+		}
+
+		ArrayList<String> variables = new ArrayList<String>();
+		variables.addAll(factor.getHeaderColumns());
+		Set<String> newVariables = new HashSet<String>(variables.size() - 1);
+		for (String v : variables) {
+			if (!v.equals(variable)) {
+				newVariables.add(v);
+			}
+		}
+		Factor returnFactor = new Factor(newVariables);
+		for (String key : groupedMap.keySet()) {
+			Double val = groupedMap.get(key);
+			String[] newRow = {key,""+val};
+			returnFactor.addRow(newRow);
+		}
+
+		return returnFactor;
+	}
+	
+	public static Factor normalize(Factor factor) {
+		Factor returnFactor = new Factor(factor.getHeaderColumns());
+		double sum = 0;
+		for (String[] row : factor.getTable()) {
+			sum += factor.RowProb(row);
+		}
+		for (String[] row : factor.getTable()) {
+			String[] newRow = new String[row.length+1];
+			for (int i = 0; i < row.length; i++) {
+				newRow[i] = row[i];
+			}
+			newRow[row.length] = "" +factor.RowProb(row)/sum;
+			returnFactor.addRow(newRow);
+		}
+		return returnFactor;
+	}
 	
 	
 	public String toString() {

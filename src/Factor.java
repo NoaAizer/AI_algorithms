@@ -91,7 +91,11 @@ public class Factor{
 			this.addRow(lastRow);
 		}
 	}
-	
+	/**
+	 * Contractor 
+	 * creating empty factor with just columns
+	 * @param HeaderColumns
+	 */
 	public Factor(Set<String> HeaderColumns) {
 		this.id = Factor.ID;
 		Factor.ID++;
@@ -171,12 +175,32 @@ public class Factor{
 	public double RowProb(int index) {
 		return Double.valueOf(this.iloc(index)[this.iloc(index).length-1]);
 	}
+	/**
+	 * Returns the probability of specific row by the index.
+	 * @param row a row in the factor
+	 * @return the probability
+	 */
+	public double RowProb(String[] row) {
+		return Double.valueOf(row[row.length-1]);
+	}
 	/*
 	 * the size of the factor
 	 */
 	public int size() {
 		return this.table.size();
 	}
+	/**
+	 * finding the variable column index
+	 * @param variable
+	 * @return the position of the columns
+	 */
+	public int getPositionByVariable(String variable) {
+		int varIndex = 0;
+		for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext() && !iterator.next().equals(variable);) {
+			varIndex++;
+		}
+		return varIndex;
+	  }
 	/**
 	 * 
 	 * @param where condition
@@ -187,11 +211,7 @@ public class Factor{
 		int foundVar = 0;
 		Set<String> headerColumns = this.headerColumns;
 		for (String condition : conditions) {
-			int varIndex = 0;
-			for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext() && !iterator.next().equals(condition.substring(0,condition.indexOf("=")));) {
-				//finding the evidence column index
-				varIndex++;
-			}
+			int varIndex = getPositionByVariable(condition.substring(0,condition.indexOf("=")));
 			if(varIndex < headerColumns.size()) {
 				foundVar++;
 				for (int i = 0; i < this.table.size(); i++) {
