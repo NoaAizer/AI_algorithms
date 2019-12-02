@@ -168,10 +168,19 @@ public class Factor{
 		return this.iloc(this.RowsNumber-1);
 	}
 	/**
+	 * set the probability of a row
+	 * @param index represents the row's index.
+	 */
+	public void setRowProb(int index, double prob) {
+		this.iloc(index)[this.iloc(index).length-1] = "" +prob;
+		
+	}
+	/**
 	 * Returns the probability of a row by the index.
 	 * @param index represents the row's index.
 	 * @return the probability
 	 */
+	
 	public double RowProb(int index) {
 		return Double.valueOf(this.iloc(index)[this.iloc(index).length-1]);
 	}

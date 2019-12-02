@@ -86,7 +86,6 @@ public class VariableElimination {
 //			joinAll(hiddenVar);
 ////			eliminate(hiddenVar);
 //		}
-////		narm
 //	}
 //	public void joinAll() {
 //	       // To find the symmetric difference 
@@ -95,21 +94,56 @@ public class VariableElimination {
 //        System.out.print("Difference of the two Set"); 
 //        System.out.println(difference); 
 //	}
-	private int getDiff(Factor factor1, Factor factor2) { //factor1 <= factor2
-		Set<String> difference = new HashSet<String>(factor1.getHeaderColumns()); 
-		difference.removeAll(factor2.getHeaderColumns()); 
-		return difference.size();
+	/**
+	 * given a hidden variable and return list of factor that the hidden variable contains
+	 * @param hiddenVariable a hidden variable to search
+	 * @return list of factor that the hidden variable contains
+	 */
+	public ArrayList<Factor> factorsListByHiddenViarable(String hiddenVariable) {
+		ArrayList<Factor> result = new ArrayList<Factor>();
+		for (Iterator<Factor> iterator = this.Factors.iterator(); iterator.hasNext();) {
+			Factor factor = (Factor) iterator.next();
+			if(factor.getHeaderColumns().contains(hiddenVariable)) {
+				result.add(factor);
+			}
+		}
+		return result;
+	}
+	private Set<String> getInter(Factor factor1, Factor factor2) { //factor1 <= factor2
+		Set<String> intersection = new HashSet<String>(factor1.getHeaderColumns()); 
+		intersection.retainAll(factor2.getHeaderColumns()); 
+		return intersection;
 	}
 	public Factor join(Factor factor1, Factor factor2) {
-        // To find union 
-        Set<String> unionHeaderColumns = new HashSet<String>(factor1.getHeaderColumns()); 
-        unionHeaderColumns.addAll(factor1.getHeaderColumns());
+		// To find union 
+		Set<String> unionHeaderColumns = new HashSet<String>(factor1.getHeaderColumns()); 
+		unionHeaderColumns.addAll(factor1.getHeaderColumns());
 		Factor returnFactor = new Factor(unionHeaderColumns);
-		if(getDiff(factor1,factor2) == 0) {
+		Set<String> inter= getInter(factor1,factor2);
+		if(inter.size() == 1) {
 			returnFactor.setTable(factor2.getTable());
-			
+			for (Iterator<String> iterator = inter.iterator(); iterator.hasNext();)
+			{
+				String temp_var= iterator.next();
+				int indexCol1=factor1.getPositionByVariable(temp_var);
+				int indexCol2=factor2.getPositionByVariable(temp_var);
+
+				for(int i=0;i<factor2.getTable().size();i++)
+				{
+					for(int j=0;j<factor1.getTable().size();j++) {
+
+						if(factor2.iloc(i)[indexCol2].equals(factor1.iloc(j)[indexCol1]))
+						{
+							double newProb =factor2.RowProb(i)*factor1.RowProb(j);
+							returnFactor.setRowProb(i,newProb);
+							break;
+						}
+
+					}
+				}
+			}
+			Factors.add(returnFactor);
 		}
-		
 		return returnFactor;
 	}
 	
