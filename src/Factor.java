@@ -16,8 +16,8 @@ public class Factor{
 	private HashMap<Integer,String[]>indexToRow;
 	private Set<String> headerColumns;
 	private ArrayList<String[]> table;
-	
-	
+
+
 	public ArrayList<String[]> getTable() {
 		return table;
 	}
@@ -31,7 +31,6 @@ public class Factor{
 			}
 			this.addRow(copyRow);
 		}
-		this.table = table;
 	}
 
 	/**
@@ -49,6 +48,7 @@ public class Factor{
 			}
 		}
 		this.name = SB.substring(0);
+		this.RowsNumber = 0;
 		this.indexToRow= new HashMap<Integer,String[]>();
 		this.headerColumns= new HashSet<String>();
 		this.headerColumns.addAll(n.getTable().getHeaderColumns());
@@ -91,6 +91,10 @@ public class Factor{
 			this.addRow(lastRow);
 		}
 	}
+	public int getId() {
+		return id;
+	}
+
 	/**
 	 * Contractor 
 	 * creating empty factor with just columns
@@ -106,6 +110,7 @@ public class Factor{
 			}
 		}
 		this.name = SB.substring(0);
+		this.RowsNumber =0;
 		this.indexToRow= new HashMap<Integer,String[]>();
 		this.headerColumns= new HashSet<String>(HeaderColumns);
 		this.table= new ArrayList<String[]>();
@@ -173,14 +178,21 @@ public class Factor{
 	 */
 	public void setRowProb(int index, double prob) {
 		this.iloc(index)[this.iloc(index).length-1] = "" +prob;
-		
 	}
+	/**
+	 * rows number getter
+	 * @return the number of rows in the factor's table.
+	 */
+	public int getRowsNumber() {
+		return RowsNumber;
+	}
+
 	/**
 	 * Returns the probability of a row by the index.
 	 * @param index represents the row's index.
 	 * @return the probability
 	 */
-	
+
 	public double RowProb(int index) {
 		return Double.valueOf(this.iloc(index)[this.iloc(index).length-1]);
 	}
@@ -209,7 +221,24 @@ public class Factor{
 			varIndex++;
 		}
 		return varIndex;
-	  }
+	}
+	/**
+	 * finding the variable by the column index
+	 * @param column 
+	 * @return the variable in the given columns
+	 */
+	public String getVariableByPosition(int column) {
+		int varIndex = 0;
+		String var="";
+		for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext();) {
+			if(varIndex == column)
+				return iterator.next();
+			iterator.next();
+			varIndex++;
+		}
+		return var;
+	}
+
 	/**
 	 * 
 	 * @param where condition
@@ -231,26 +260,40 @@ public class Factor{
 				}
 			}
 		}
+		if(foundVar == 1) {
+			this.indexToRow.clear();
+			for (int i = 0; i < result.size(); i++) {
+				this.indexToRow.put(i,result.get(i));
+			}
+		}
 		if(foundVar > 1) { // stay only the duplicated row
 			result = stayDuplicatedRow(result);
+			this.indexToRow.clear();
+			for (int i = 0; i < result.size(); i++) {
+				this.indexToRow.put(i,result.get(i));
+			}
 		}
+		//		if (result.size() > 0) {
+		//			this.indexToRow = indexToRow;
+		//			this.table = result;
+		//		}
 		this.table = (result.size() == 0) ? this.table : result;
-//		for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext();) {
-//			String evidence = (String) iterator.next();
-//			removeEvidenceColumns(evidence);
-//		}
+		//		for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext();) {
+		//			String evidence = (String) iterator.next();
+		//			removeEvidenceColumns(evidence);
+		//		}
 	}
-//	private void removeEvidenceColumns(String evidence) {
-//		ArrayList<String> coulmns = this.headerColumns;
-//		for (Iterator<String> iterator = coulmns.iterator(); iterator.hasNext();) {
-//			int indexCol = 0;
-//			String col = (String) iterator.next();
-//			if(!col.equals(evidence)) {
-//				removeColumns(indexCol);
-//			}
-//			
-//		}
-//	}
+	//	private void removeEvidenceColumns(String evidence) {
+	//		ArrayList<String> coulmns = this.headerColumns;
+	//		for (Iterator<String> iterator = coulmns.iterator(); iterator.hasNext();) {
+	//			int indexCol = 0;
+	//			String col = (String) iterator.next();
+	//			if(!col.equals(evidence)) {
+	//				removeColumns(indexCol);
+	//			}
+	//			
+	//		}
+	//	}
 	/*
 	 * in case that we have more then 1 condition we need to save just the rows that uphold the all condition
 	 * @param table the result before the changes
