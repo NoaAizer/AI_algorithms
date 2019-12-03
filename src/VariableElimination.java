@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -166,13 +167,6 @@ public class VariableElimination {
 			Factor[] toJoin = minimumActions(factorsList);
 			factorsList.add(join(toJoin[0],toJoin[1]));
 		}
-
-		//	       // To find the symmetric difference 
-		//        Set<Integer> difference = new HashSet<Integer>(a); 
-		//        difference.removeAll(b); 
-		//        System.out.print("Difference of the two Set"); 
-		//        System.out.println(difference); 
-		//
 	}
 	/**
 	 * get a factor list and return two factors that the join will be happen with a minimum actions
@@ -181,26 +175,35 @@ public class VariableElimination {
 	 * @return array with to factors
 	 */
 	private Factor[] minimumActions(ArrayList<Factor> factorsList) {
-		HashMap<Integer,Factor[]> numberOfAction = new HashMap<Integer,Factor[]>();
+		HashMap<Integer,Factor[]> numberOfActionToFactors = new HashMap<Integer,Factor[]>();
 		for (Iterator<Factor> iterator = factorsList.iterator(); iterator.hasNext();) {
 			Factor factor1 = (Factor) iterator.next();
 			for (Iterator<Factor> iterator2 = factorsList.iterator(); iterator2.hasNext();) {
 				Factor factor2 = (Factor) iterator2.next();
 				if(!factor1.equals(factor2)) { //implemnt equals for Factor
 					Factor[] p = {factor1,factor2};
-					numberOfAction.put(numberOfActions(factor1,factor2),p);
+					numberOfActionToFactors.put(numberOfActions(factor1,factor2),p);
 				}
 			}
 		}
-		int minAction = 0;//do key minimum function
-		return numberOfAction.get(minAction);
+		return numberOfActionToFactors.get(findMinAction(numberOfActionToFactors));
+	}
+	/**
+	 * 
+	 * @param numberOfAction hash map that key is number of action and value is the an array of two factor.
+	 * @return the number of minimum action for join 
+	 */
+	private int findMinAction(HashMap<Integer,Factor[]> numberOfAction) {
+		return Collections.min(numberOfAction.keySet());
 	}
 	/**
 	 * @return number of actions to do join to f1 and f2 factors
 	 */
 	private int numberOfActions(Factor f1,Factor f2) {
-		int answer = 0;
-		return answer;
+		// To find the symmetric difference 
+		Set<String> difference = new HashSet<String>(f1.getHeaderColumns()); 
+		difference.removeAll(f2.getHeaderColumns()); 		
+		return difference.size()*Math.max(f1.size(),f2.size());
 	}
 	private Set<String> getInter(Factor factor1, Factor factor2) { //factor1 < factor2
 		Set<String> intersection = new HashSet<String>(factor1.getHeaderColumns()); 
