@@ -48,61 +48,18 @@ public class VariableElimination {
 			NBnode n = (NBnode) iterator.next(); //new NBnode ((NBnode) iterator.next(),this.E);
 			if(this.Q.contains(n.getName()) || isEvidence(n.getName()) || isAncestor(n)) {
 				//return true or false if we need to build for this node a factor
-				Factors.add(new Factor(n));
+				this.Factors.add(new Factor(n));
 				this.lastFactor().restrictFactor(this.E);
 				if(this.lastFactor().size() <= 1) { //if the factor is just evidence
-					Factors.remove(this.lastFactor());
+					this.Factors.remove(this.lastFactor());
 				}
 			}
 		}
-		for (Factor factor : Factors) {
-			int id=factor.getId();
-			Factor remFac=removeSameValuesColumn(factor);
-			if(remFac!=null) {
-				factor=new Factor(remFac.getHeaderColumns());
-				factor.setTable(remFac.getTable());
-			}
+		for (int i = 0; i < this.Factors.size(); i++) {
+			Factor pointer = removeSameValuesColumn(this.Factors.get(i));
+			this.Factors.set(i,(pointer != null) ? pointer : this.Factors.get(i));
 		}
 	}
-	private Factor removeSameValuesColumn(Factor f)
-	{
-		Factor returnFactor=null;
-		for(int col=0;col<f.getHeaderColumns().size();col++) 
-		{
-			boolean flag=true;
-			String value=f.iloc(0)[col];
-			for(int rows=1;rows<f.getTable().size();rows++) {
-				if(!f.iloc(rows)[col].equals(value)) {
-					flag=false;
-					break;
-				}
-			}
-			if(flag)
-			{
-				Set<String> newHeaderColumns= new HashSet <String>();
-				for (Iterator<String> iterator = f.getHeaderColumns().iterator(); iterator.hasNext();) {
-					String tempVar= iterator.next();
-					if(tempVar.equals(f.getVariableByPosition(col)))
-						newHeaderColumns.add(tempVar);
-				}
-				returnFactor= new Factor (newHeaderColumns);
-				for(int r=0;r<f.getTable().size();r++) {
-					String[] newRow= new String [f.getHeaderColumns().size()];
-					int rowCol=0;
-					for(int c=0;c<f.getHeaderColumns().size();c++) 
-						if(c!=col) {
-							newRow[rowCol]=f.iloc(r)[c];
-							rowCol++;
-						}
-					newRow[rowCol]=""+f.RowProb(r);
-					returnFactor.addRow(newRow);
-
-				}
-			}
-		}
-		return returnFactor;
-	}
-
 	private boolean isEvidence(String e) { //return true is the node is evidence and false otherwise
 		for (Iterator<String> iterator = this.E.iterator(); iterator.hasNext();) {
 			String evidence = (String) iterator.next();
@@ -128,12 +85,54 @@ public class VariableElimination {
 		}
 		return false;
 	}
+	private Factor removeSameValuesColumn(Factor f)
+	{
+		Factor returnFactor=null;
+		for(int col=0;col<f.getHeaderColumns().size();col++) 
+		{
+			boolean flag=true;
+			String value=f.iloc(0)[col];
+			for(int rows=1;rows<f.getTable().size();rows++) {
+				if(!f.iloc(rows)[col].equals(value)) {
+					flag=false;
+					break;
+				}
+			}
+			if(flag)
+			{
+				Set<String> newHeaderColumns= new HashSet <String>();
+				for (Iterator<String> iterator = f.getHeaderColumns().iterator(); iterator.hasNext();) {
+					String tempVar= iterator.next();
+					if(tempVar.equals(f.getVariableByPosition(col)))
+						newHeaderColumns.add(tempVar);
+				}
+				returnFactor= new Factor (newHeaderColumns,f.getId());
+				for(int r=0;r<f.getTable().size();r++) {
+					String[] newRow= new String [f.getHeaderColumns().size()];
+					int rowCol=0;
+					for(int c=0;c<f.getHeaderColumns().size();c++) 
+						if(c!=col) {
+							newRow[rowCol]=f.iloc(r)[c];
+							rowCol++;
+						}
+					newRow[rowCol]=""+f.RowProb(r);
+					returnFactor.addRow(newRow);
+
+				}
+			}
+		}
+		return returnFactor;
+	}
+
 	/*
 	 * return the last factor from the list factors
 	 */
 	public Factor lastFactor() {
 		return Factors.get(Factors.size()-1);
 	}
+
+
+
 	/**
 	 * starting the variableElimination algorithm
 	 */
@@ -144,6 +143,7 @@ public class VariableElimination {
 			joinAll(hiddenFactorsList);
 			this.Factors.add(eliminate(hiddenFactorsList.get(0),hiddenVar));
 		}
+		//		System.out.println(this.Factors.toString());
 		Factor answer = normalize(this.Factors.get(0));
 		System.out.println(answer.toString());
 	}
@@ -165,6 +165,8 @@ public class VariableElimination {
 	public void joinAll(ArrayList<Factor> factorsList) {
 		while(factorsList.size() > 1) {
 			Factor[] toJoin = minimumActions(factorsList);
+			factorsList.remove(toJoin[0]);
+			factorsList.remove(toJoin[1]);
 			factorsList.add(join(toJoin[0],toJoin[1]));
 		}
 	}

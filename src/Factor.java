@@ -30,6 +30,7 @@ public class Factor{
 				copyRow[j] = row[j];
 			}
 			this.addRow(copyRow);
+			this.indexToRow.put(this.table.size()-1,this.table.get(this.table.size()-1));
 		}
 	}
 
@@ -97,7 +98,7 @@ public class Factor{
 
 	/**
 	 * Contractor 
-	 * creating empty factor with just columns
+	 * creating empty new factor with just columns
 	 * @param HeaderColumns
 	 */
 	public Factor(Set<String> HeaderColumns) {
@@ -114,6 +115,12 @@ public class Factor{
 		this.indexToRow= new HashMap<Integer,String[]>();
 		this.headerColumns= new HashSet<String>(HeaderColumns);
 		this.table= new ArrayList<String[]>();
+	}
+
+	public Factor(Set<String> newHeaderColumns, int id) {
+		this(newHeaderColumns);
+		this.id = id;
+		Factor.ID--;
 	}
 
 	/**
