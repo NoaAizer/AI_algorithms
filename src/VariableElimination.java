@@ -4,9 +4,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
-
 
 /**
  * implement VariableElimination algorithm.
@@ -20,6 +20,9 @@ public class VariableElimination {
 	private PriorityQueue<String> JoinOrder;// the order of the joining
 	ArrayList<Factor> Factors;
 	private bayesianNet bn;
+	private int numOfMul;
+	private int numOfAdd;
+	private HashMap<String,Integer> variableToValues;
 	/**
 	 * Constructor
 	 * @param request represents a query.
@@ -27,7 +30,14 @@ public class VariableElimination {
 	 */
 	public VariableElimination(String request,bayesianNet bn)
 	{
+		numOfMul = 0;
+		numOfAdd = 0;
 		this.bn = bn;
+		this.variableToValues = new HashMap<String,Integer>();
+		for (Iterator<NBnode> iterator = this.bn.getNodesList().iterator(); iterator.hasNext();) {
+			NBnode n = (NBnode) iterator.next();
+			this.variableToValues.put(n.getName(),n.getValues().size());
+		}
 		this.JoinOrder= new PriorityQueue<String>();
 		request = request.replace("P(", "");
 		String[] splitToInsertCalcOrder = request.split("\\),");
@@ -103,7 +113,7 @@ public class VariableElimination {
 				Set<String> newHeaderColumns= new HashSet <String>();
 				for (Iterator<String> iterator = f.getHeaderColumns().iterator(); iterator.hasNext();) {
 					String tempVar= iterator.next();
-					if(tempVar.equals(f.getVariableByPosition(col)))
+					if(!tempVar.equals(f.getVariableByPosition(col)))
 						newHeaderColumns.add(tempVar);
 				}
 				returnFactor= new Factor (newHeaderColumns,f.getId());
@@ -136,16 +146,34 @@ public class VariableElimination {
 	/**
 	 * starting the variableElimination algorithm
 	 */
-	public void start() {
+	public String[] start() {
 		for (Iterator<String> iterator = this.JoinOrder.iterator(); iterator.hasNext();) {
 			String hiddenVar = (String) iterator.next();
 			ArrayList<Factor> hiddenFactorsList = factorsListByHiddenViarable(hiddenVar);
-			joinAll(hiddenFactorsList);
-			this.Factors.add(eliminate(hiddenFactorsList.get(0),hiddenVar));
+			this.Factors.removeAll(hiddenFactorsList);
+			Factor factorOfAllJoins = joinAll(hiddenFactorsList);
+			if(factorOfAllJoins != null)
+				this.Factors.add(eliminate(factorOfAllJoins,hiddenVar));
 		}
-		//		System.out.println(this.Factors.toString());
-		Factor answer = normalize(this.Factors.get(0));
-		System.out.println(answer.toString());
+		normalize(this.lastFactor());
+		System.out.println(this.lastFactor().toString());
+		String[] results=new String [3];
+		results[0]=getAnswer(this.lastFactor());
+		results[1]=""+this.numOfAdd;
+		results[2]=""+this.numOfMul;
+		return results;
+	}
+	public String getAnswer(Factor f) {
+		String[] splitQ = this.Q.split("=");
+		int colIndex=f.getPositionByVariable(splitQ[0]);
+		String value=splitQ[1];
+		int i=0;
+		for(;i<f.getTable().size();i++) {
+			if(f.iloc(i)[colIndex].equals(value))
+				break;
+		}
+		return ""+f.RowProb(i);
+
 	}
 	/**
 	 * given a hidden variable and return list of factor that the hidden variable contains
@@ -162,13 +190,16 @@ public class VariableElimination {
 		}
 		return result;
 	}
-	public void joinAll(ArrayList<Factor> factorsList) {
+	public Factor joinAll(ArrayList<Factor> factorsList) {
 		while(factorsList.size() > 1) {
 			Factor[] toJoin = minimumActions(factorsList);
 			factorsList.remove(toJoin[0]);
 			factorsList.remove(toJoin[1]);
 			factorsList.add(join(toJoin[0],toJoin[1]));
 		}
+		if (!factorsList.isEmpty())
+			return factorsList.get(0);
+		return null;
 	}
 	/**
 	 * get a factor list and return two factors that the join will be happen with a minimum actions
@@ -182,7 +213,7 @@ public class VariableElimination {
 			Factor factor1 = (Factor) iterator.next();
 			for (Iterator<Factor> iterator2 = factorsList.iterator(); iterator2.hasNext();) {
 				Factor factor2 = (Factor) iterator2.next();
-				if(!factor1.equals(factor2)) { //implemnt equals for Factor
+				if(!factor1.equals(factor2)) {
 					Factor[] p = {factor1,factor2};
 					numberOfActionToFactors.put(numberOfActions(factor1,factor2),p);
 				}
@@ -196,17 +227,37 @@ public class VariableElimination {
 	 * @return the number of minimum action for join 
 	 */
 	private int findMinAction(HashMap<Integer,Factor[]> numberOfAction) {
-		return Collections.min(numberOfAction.keySet());
+		int minAction = Collections.min(numberOfAction.keySet());
+		return minAction;
 	}
 	/**
 	 * @return number of actions to do join to f1 and f2 factors
 	 */
 	private int numberOfActions(Factor f1,Factor f2) {
-		// To find the symmetric difference 
-		Set<String> difference = new HashSet<String>(f1.getHeaderColumns()); 
-		difference.removeAll(f2.getHeaderColumns()); 		
-		return difference.size()*Math.max(f1.size(),f2.size());
+		Set<String> difference= new HashSet<String>();
+		int mul = 1;
+		if (f1.getHeaderColumns().size() >f2.getHeaderColumns().size()) {
+			difference = new HashSet<String>(f2.getHeaderColumns()); 
+			difference.removeAll(f1.getHeaderColumns());
+			for (Iterator<String> iterator = difference.iterator(); iterator.hasNext();) {
+				String var = (String) iterator.next();
+				mul *= this.variableToValues.get(var);
+			}
+			return difference.size()*f1.size()*mul;
+
+		}
+		else{
+			difference = new HashSet<String>(f1.getHeaderColumns()); 
+			difference.removeAll(f1.getHeaderColumns());
+			for (Iterator<String> iterator = difference.iterator(); iterator.hasNext();) {
+				String var = (String) iterator.next();
+				mul *= this.variableToValues.get(var);
+			}
+			return difference.size()*f2.size()*mul;
+		}
 	}
+
+
 	private Set<String> getInter(Factor factor1, Factor factor2) { //factor1 < factor2
 		Set<String> intersection = new HashSet<String>(factor1.getHeaderColumns()); 
 		intersection.retainAll(factor2.getHeaderColumns()); 
@@ -250,6 +301,7 @@ public class VariableElimination {
 								newRow[c2]=factor2.iloc(rows2)[c2];
 							returnFactor.addRow(newRow);
 							double newProb =factor2.RowProb(rows2)*factor1.RowProb(rows1);
+							this.numOfMul++;
 							returnFactor.iloc(returnFactor.getRowsNumber()-1)[returnFactor.getHeaderColumns().size()]=""+newProb;
 						}
 						else {
@@ -265,89 +317,56 @@ public class VariableElimination {
 								}
 							}
 							newRow[rowCol]= ""+factor2.RowProb(rows2)*factor1.RowProb(rows1);
-							returnFactor.addRow(newRow);	
+							this.numOfMul++;
+							returnFactor.addRow(newRow);
 						}
 					}
 				}
 			}
 		}
-		//		if(inter.size() ==1) {
-		//			returnFactor.setTable(factor2.getTable());
-		//			for (Iterator<String> iterator = inter.iterator(); iterator.hasNext();)
-		//			{
-		//				String temp_var= iterator.next();
-		//				int indexCol1=factor1.getPositionByVariable(temp_var);
-		//				int indexCol2=factor2.getPositionByVariable(temp_var);
-		//
-		//				for(int i=0;i<factor2.getTable().size();i++)
-		//				{
-		//					for(int j=0;j<factor1.getTable().size();j++) {
-		//
-		//						if(factor2.iloc(i)[indexCol2].equals(factor1.iloc(j)[indexCol1]))
-		//						{
-		//							double newProb =factor2.RowProb(i)*factor1.RowProb(j);
-		//							returnFactor.setRowProb(i,newProb);
-		//							break;
-		//						}
-		//
-		//					}
-		//				}
-		//			}
-		//
-		//		}
+		System.out.println("join for "+factor1.getId()+", and: "+factor2.getId()+":\n" + returnFactor.toString());
 		return returnFactor;
 	}
-	public static Factor eliminate(Factor factor, String variable) {
-		int position = factor.getPositionByVariable(variable);
-		HashMap<String, Double> groupedMap = new HashMap<String, Double>();
-		for (String[] row : factor.getTable()) {
-			String key = "";
-			for (int i = 0; i < row.length; i++) {
-				if (i != position) {
-					key += row[i];
+	public Factor eliminate(Factor factor, String variable) {
+
+		factor = factor.removeColumn(variable);
+		Factor returnFactor = new Factor(factor.getHeaderColumns());
+		for(int rows1=0;rows1<factor.getTable().size();rows1++)
+		{
+			for(int nextRows=rows1+1;nextRows<factor.getTable().size();nextRows++) 
+			{
+				for( int c=0;c<factor.getHeaderColumns().size();c++)
+				{
+					if(!factor.iloc(rows1)[c].equals(factor.iloc(nextRows)[c]))
+						break;	
+					if(factor.iloc(rows1)[c].equals(factor.iloc(nextRows)[c])&&(c==factor.getHeaderColumns().size()-1))
+					{
+						String[] newRow= new String [factor.getHeaderColumns().size()+1];
+						int col_num=0;
+						for(c=0;c<factor.getHeaderColumns().size();c++) { 
+							newRow[col_num]=factor.iloc(rows1)[c];
+							col_num++;
+						}
+						newRow[col_num]= ""+(factor.RowProb(rows1)+factor.RowProb(nextRows));
+						this.numOfAdd++;
+						returnFactor.addRow(newRow);
+					}
 				}
 			}
-			Double probability = groupedMap.get(key);
-			if (probability != null) {
-				probability += factor.RowProb(row);
-			} else {
-				probability = factor.RowProb(row);
-			}
-			groupedMap.put(key, probability);
 		}
-
-		ArrayList<String> variables = new ArrayList<String>();
-		variables.addAll(factor.getHeaderColumns());
-		Set<String> newVariables = new HashSet<String>(variables.size() - 1);
-		for (String v : variables) {
-			if (!v.equals(variable)) {
-				newVariables.add(v);
-			}
-		}
-		Factor returnFactor = new Factor(newVariables);
-		for (String key : groupedMap.keySet()) {
-			Double val = groupedMap.get(key);
-			String[] newRow = {key,""+val};
-			returnFactor.addRow(newRow);
-		}
-
+		System.out.println("sumout:\n" + returnFactor.toString());
 		return returnFactor;
 	}
-	private static Factor normalize(Factor factor) {
-		Factor returnFactor = new Factor(factor.getHeaderColumns());
+	private void normalize(Factor factor) {
+
 		double sum = 0;
 		for (String[] row : factor.getTable()) {
 			sum += factor.RowProb(row);
+			this.numOfAdd++;
 		}
-		for (String[] row : factor.getTable()) {
-			String[] newRow = new String[row.length+1];
-			for (int i = 0; i < row.length; i++) {
-				newRow[i] = row[i];
-			}
-			newRow[row.length] = "" +factor.RowProb(row)/sum;
-			returnFactor.addRow(newRow);
+		for(int i=0;i<factor.getTable().size();i++) {
+			factor.setRowProb(i,factor.RowProb(i)/sum);
 		}
-		return returnFactor;
 	}
 	public String toString() {
 		StringBuilder SB = new StringBuilder();

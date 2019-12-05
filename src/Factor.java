@@ -17,23 +17,6 @@ public class Factor{
 	private Set<String> headerColumns;
 	private ArrayList<String[]> table;
 
-
-	public ArrayList<String[]> getTable() {
-		return table;
-	}
-
-	public void setTable(ArrayList<String[]> table) {
-		for (Iterator<String[]> iterator = table.iterator(); iterator.hasNext();) {
-			String[] row = (String[]) iterator.next();
-			String[] copyRow = new String[row.length];
-			for (int j = 0; j < row.length; j++) {
-				copyRow[j] = row[j];
-			}
-			this.addRow(copyRow);
-			this.indexToRow.put(this.table.size()-1,this.table.get(this.table.size()-1));
-		}
-	}
-
 	/**
 	 * Constructor
 	 * @param n is the node we creates its factor.
@@ -121,6 +104,25 @@ public class Factor{
 		this(newHeaderColumns);
 		this.id = id;
 		Factor.ID--;
+	}
+
+	public boolean equals (Factor f) {
+		return this.id == f.id;
+	}
+	public ArrayList<String[]> getTable() {
+		return table;
+	}
+
+	public void setTable(ArrayList<String[]> table) {
+		for (Iterator<String[]> iterator = table.iterator(); iterator.hasNext();) {
+			String[] row = (String[]) iterator.next();
+			String[] copyRow = new String[row.length];
+			for (int j = 0; j < row.length; j++) {
+				copyRow[j] = row[j];
+			}
+			this.addRow(copyRow);
+			this.indexToRow.put(this.table.size()-1,this.table.get(this.table.size()-1));
+		}
 	}
 
 	/**
@@ -218,6 +220,29 @@ public class Factor{
 		return this.table.size();
 	}
 	/**
+	 * remove a column for the table by a variable name
+	 * @param col represents the variable column name;
+	 * @return a new factor without the column.
+	 */
+	public Factor removeColumn(String col) {
+		Set<String> headerCol = new HashSet<>(this.headerColumns);
+		headerCol.remove(col);
+		Factor returnFactor= new Factor(headerCol,this.id);
+		for(int row=0;row<this.table.size();row++) {
+		String[] newRow= new String [this.headerColumns.size()];
+		int col_num=0;
+		for(int c=0;c<this.headerColumns.size();c++) { 
+			if(!this.getVariableByPosition(c).equals(col)) {
+				newRow[col_num]=this.iloc(row)[c];
+				col_num++;
+			}
+		}
+		newRow[col_num]= ""+(this.RowProb(row));
+		returnFactor.addRow(newRow);
+	}
+		return returnFactor;
+	}
+	/**
 	 * finding the variable column index
 	 * @param variable
 	 * @return the position of the columns
@@ -280,27 +305,8 @@ public class Factor{
 				this.indexToRow.put(i,result.get(i));
 			}
 		}
-		//		if (result.size() > 0) {
-		//			this.indexToRow = indexToRow;
-		//			this.table = result;
-		//		}
 		this.table = (result.size() == 0) ? this.table : result;
-		//		for (Iterator<String> iterator = headerColumns.iterator(); iterator.hasNext();) {
-		//			String evidence = (String) iterator.next();
-		//			removeEvidenceColumns(evidence);
-		//		}
 	}
-	//	private void removeEvidenceColumns(String evidence) {
-	//		ArrayList<String> coulmns = this.headerColumns;
-	//		for (Iterator<String> iterator = coulmns.iterator(); iterator.hasNext();) {
-	//			int indexCol = 0;
-	//			String col = (String) iterator.next();
-	//			if(!col.equals(evidence)) {
-	//				removeColumns(indexCol);
-	//			}
-	//			
-	//		}
-	//	}
 	/*
 	 * in case that we have more then 1 condition we need to save just the rows that uphold the all condition
 	 * @param table the result before the changes
