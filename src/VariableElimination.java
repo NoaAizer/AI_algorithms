@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -15,6 +14,7 @@ import java.util.Set;
  *
  */
 public class VariableElimination {
+	private int idFactor;
 	private String Q;// the variable of the query
 	private ArrayList<String> E;// a list of the evidences
 	private PriorityQueue<String> JoinOrder;// the order of the joining
@@ -23,6 +23,7 @@ public class VariableElimination {
 	private int numOfMul;
 	private int numOfAdd;
 	private HashMap<String,Integer> variableToValues;
+	public boolean printActions;
 	/**
 	 * Constructor
 	 * @param request represents a query.
@@ -30,8 +31,7 @@ public class VariableElimination {
 	 */
 	public VariableElimination(String request,bayesianNet bn)
 	{
-		numOfMul = 0;
-		numOfAdd = 0;
+		this.idFactor = 1;
 		this.bn = bn;
 		this.variableToValues = new HashMap<String,Integer>();
 		for (Iterator<NBnode> iterator = this.bn.getNodesList().iterator(); iterator.hasNext();) {
@@ -58,7 +58,7 @@ public class VariableElimination {
 			NBnode n = (NBnode) iterator.next(); //new NBnode ((NBnode) iterator.next(),this.E);
 			if(this.Q.contains(n.getName()) || isEvidence(n.getName()) || isAncestor(n)) {
 				//return true or false if we need to build for this node a factor
-				this.Factors.add(new Factor(n));
+				this.Factors.add(new Factor(n,this.idFactor++));
 				this.lastFactor().restrictFactor(this.E);
 				if(this.lastFactor().size() <= 1) { //if the factor is just evidence
 					this.Factors.remove(this.lastFactor());
@@ -147,6 +147,8 @@ public class VariableElimination {
 	 * starting the variableElimination algorithm
 	 */
 	public String[] start() {
+		numOfMul = 0;
+		numOfAdd = 0;
 		for (Iterator<String> iterator = this.JoinOrder.iterator(); iterator.hasNext();) {
 			String hiddenVar = (String) iterator.next();
 			ArrayList<Factor> hiddenFactorsList = factorsListByHiddenViarable(hiddenVar);
@@ -156,7 +158,6 @@ public class VariableElimination {
 				this.Factors.add(eliminate(factorOfAllJoins,hiddenVar));
 		}
 		normalize(this.lastFactor());
-		System.out.println(this.lastFactor().toString());
 		String[] results=new String [3];
 		results[0]=getAnswer(this.lastFactor());
 		results[1]=""+this.numOfAdd;
@@ -190,7 +191,7 @@ public class VariableElimination {
 		}
 		return result;
 	}
-	public Factor joinAll(ArrayList<Factor> factorsList) {
+	private Factor joinAll(ArrayList<Factor> factorsList) {
 		while(factorsList.size() > 1) {
 			Factor[] toJoin = minimumActions(factorsList);
 			factorsList.remove(toJoin[0]);
@@ -209,10 +210,10 @@ public class VariableElimination {
 	 */
 	private Factor[] minimumActions(ArrayList<Factor> factorsList) {
 		HashMap<Integer,Factor[]> numberOfActionToFactors = new HashMap<Integer,Factor[]>();
-		for (Iterator<Factor> iterator = factorsList.iterator(); iterator.hasNext();) {
-			Factor factor1 = (Factor) iterator.next();
-			for (Iterator<Factor> iterator2 = factorsList.iterator(); iterator2.hasNext();) {
-				Factor factor2 = (Factor) iterator2.next();
+		for (int i = 0; i < factorsList.size(); i++) {
+			Factor factor1 = factorsList.get(i);
+			for (int j = i; j < factorsList.size(); j++) {
+				Factor factor2 = factorsList.get(j);
 				if(!factor1.equals(factor2)) {
 					Factor[] p = {factor1,factor2};
 					numberOfActionToFactors.put(numberOfActions(factor1,factor2),p);
@@ -228,6 +229,7 @@ public class VariableElimination {
 	 */
 	private int findMinAction(HashMap<Integer,Factor[]> numberOfAction) {
 		int minAction = Collections.min(numberOfAction.keySet());
+		this.numOfMul += minAction;
 		return minAction;
 	}
 	/**
@@ -236,28 +238,25 @@ public class VariableElimination {
 	private int numberOfActions(Factor f1,Factor f2) {
 		Set<String> difference= new HashSet<String>();
 		int mul = 1;
+		int numOfRows = 0;
 		if (f1.getHeaderColumns().size() >f2.getHeaderColumns().size()) {
 			difference = new HashSet<String>(f2.getHeaderColumns()); 
 			difference.removeAll(f1.getHeaderColumns());
-			for (Iterator<String> iterator = difference.iterator(); iterator.hasNext();) {
-				String var = (String) iterator.next();
-				mul *= this.variableToValues.get(var);
-			}
-			return difference.size()*f1.size()*mul;
-
+			numOfRows = f1.size();
 		}
-		else{
+		else {
 			difference = new HashSet<String>(f1.getHeaderColumns()); 
-			difference.removeAll(f1.getHeaderColumns());
-			for (Iterator<String> iterator = difference.iterator(); iterator.hasNext();) {
-				String var = (String) iterator.next();
-				mul *= this.variableToValues.get(var);
-			}
-			return difference.size()*f2.size()*mul;
+			difference.removeAll(f2.getHeaderColumns());
+			numOfRows = f2.size();
 		}
+		for (Iterator<String> iterator = difference.iterator(); iterator.hasNext();) {
+			String var = (String) iterator.next();
+			mul *= this.variableToValues.get(var);
+		}
+		if (difference.size() != 0)
+			return difference.size()*numOfRows*mul;
+		return numOfRows*mul;
 	}
-
-
 	private Set<String> getInter(Factor factor1, Factor factor2) { //factor1 < factor2
 		Set<String> intersection = new HashSet<String>(factor1.getHeaderColumns()); 
 		intersection.retainAll(factor2.getHeaderColumns()); 
@@ -270,11 +269,11 @@ public class VariableElimination {
 	 * @returnA new factor will be generated form the two factors containing all variable involved.
 	 * Its probability will be the product of the two factors.
 	 */
-	public Factor join(Factor factor1, Factor factor2) {
+	private Factor join(Factor factor1, Factor factor2) {
 		// To find union 
 		Set<String> unionHeaderColumns = new HashSet<String>(factor1.getHeaderColumns()); 
 		unionHeaderColumns.addAll(factor2.getHeaderColumns());
-		Factor returnFactor = new Factor(unionHeaderColumns);
+		Factor returnFactor = new Factor(unionHeaderColumns,this.idFactor++);
 		Set<String> inter= getInter(factor1,factor2);
 		int interArr[][]=new int[2][inter.size()];
 		int i=0;
@@ -301,7 +300,7 @@ public class VariableElimination {
 								newRow[c2]=factor2.iloc(rows2)[c2];
 							returnFactor.addRow(newRow);
 							double newProb =factor2.RowProb(rows2)*factor1.RowProb(rows1);
-							this.numOfMul++;
+						//	this.numOfMul++;
 							returnFactor.iloc(returnFactor.getRowsNumber()-1)[returnFactor.getHeaderColumns().size()]=""+newProb;
 						}
 						else {
@@ -317,20 +316,20 @@ public class VariableElimination {
 								}
 							}
 							newRow[rowCol]= ""+factor2.RowProb(rows2)*factor1.RowProb(rows1);
-							this.numOfMul++;
+						//	this.numOfMul++;
 							returnFactor.addRow(newRow);
 						}
 					}
 				}
 			}
 		}
-		System.out.println("join for "+factor1.getId()+", and: "+factor2.getId()+":\n" + returnFactor.toString());
+		if(this.printActions) System.out.println("join: "+factor1.getId()+" with "+factor2.getId()+":\n" + returnFactor.toString() + "\nnumOfAdd=" +this.numOfAdd + "\tnumOfMul= "+this.numOfMul +"\n______________________________________\n");
 		return returnFactor;
 	}
-	public Factor eliminate(Factor factor, String variable) {
+	private Factor eliminate(Factor factor, String variable) {
 
 		factor = factor.removeColumn(variable);
-		Factor returnFactor = new Factor(factor.getHeaderColumns());
+		Factor returnFactor = new Factor(factor.getHeaderColumns(),factor.getId());
 		for(int rows1=0;rows1<factor.getTable().size();rows1++)
 		{
 			for(int nextRows=rows1+1;nextRows<factor.getTable().size();nextRows++) 
@@ -354,7 +353,7 @@ public class VariableElimination {
 				}
 			}
 		}
-		System.out.println("sumout:\n" + returnFactor.toString());
+		if(this.printActions) System.out.println("eliminate " +variable+" from "+returnFactor.getId()+"\n" + returnFactor.toString() + "\nnumOfAdd=" +this.numOfAdd + "\tnumOfMul= "+this.numOfMul +"\n______________________________________\n");
 		return returnFactor;
 	}
 	private void normalize(Factor factor) {
@@ -367,6 +366,7 @@ public class VariableElimination {
 		for(int i=0;i<factor.getTable().size();i++) {
 			factor.setRowProb(i,factor.RowProb(i)/sum);
 		}
+		if(this.printActions) System.out.println("normalize for "+factor.getId()+"\n" + factor.toString()+ "\nnumOfAdd=" +this.numOfAdd + "\tnumOfMul= "+this.numOfMul +"\n______________________________________\n");
 	}
 	public String toString() {
 		StringBuilder SB = new StringBuilder();

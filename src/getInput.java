@@ -8,7 +8,7 @@ public class getInput {
 	private String pathFile;//"C:\\Users\\idsha\\eclipse-workspace\\Algoritmim_in_AI\\input.txt";
 	private bayesianNet bn=null;
 	private ArrayList<VariableElimination> veList=null;
-	
+
 	public getInput(String dataFile) {
 		this.pathFile = dataFile;
 	}
@@ -18,7 +18,6 @@ public class getInput {
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
-			int i = 0;
 			String strLine;
 			while ((strLine = br.readLine()) != null)   {
 				//			System.out.println (strLine);
@@ -28,9 +27,9 @@ public class getInput {
 				if(strLine.contains("P(")) {
 					this.veList.add(new VariableElimination(strLine,this.bn));
 				}
-//				System.out.println("line:"+i);
-				i++;
+				//				System.out.println("line:"+i);
 			}
+			br.close();
 
 		} catch (Exception e){
 			System.err.println("Error: " + e.getMessage());
@@ -94,11 +93,11 @@ public class getInput {
 					temp.getTable().addRow(row);
 				}
 
-//				System.out.println("line:"+i);
+				//				System.out.println("line:"+i);
 				i++;
 				if(strLine.contains("Queries")) {break;}
-				//				br.close();
 			}
+			br.close();
 
 		} catch (Exception e){
 			System.err.println("Error: " + e.getMessage());

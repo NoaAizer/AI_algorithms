@@ -8,8 +8,6 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 public class Factor{
-	private   static int ID=1;
-
 	private int id;
 	private String name;
 	private int RowsNumber;
@@ -21,9 +19,8 @@ public class Factor{
 	 * Constructor
 	 * @param n is the node we creates its factor.
 	 */
-	public Factor(NBnode n) {
-		this.id = Factor.ID;
-		Factor.ID++;
+	public Factor(NBnode n,int id) {
+		this.id = id;
 		StringBuilder SB = new StringBuilder();
 		SB.append(n.getName());
 		if(n.parents != null) {
@@ -84,9 +81,8 @@ public class Factor{
 	 * creating empty new factor with just columns
 	 * @param HeaderColumns
 	 */
-	public Factor(Set<String> HeaderColumns) {
-		this.id = Factor.ID;
-		Factor.ID++;
+	public Factor(Set<String> HeaderColumns,int id) {
+		this.id = id;
 		StringBuilder SB = new StringBuilder();
 		if(HeaderColumns != null) {
 			for (Iterator<String> iterator = HeaderColumns.iterator(); iterator.hasNext();) {
@@ -98,12 +94,6 @@ public class Factor{
 		this.indexToRow= new HashMap<Integer,String[]>();
 		this.headerColumns= new HashSet<String>(HeaderColumns);
 		this.table= new ArrayList<String[]>();
-	}
-
-	public Factor(Set<String> newHeaderColumns, int id) {
-		this(newHeaderColumns);
-		this.id = id;
-		Factor.ID--;
 	}
 
 	public boolean equals (Factor f) {
