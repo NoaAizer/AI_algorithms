@@ -39,9 +39,9 @@ public class Factor{
 			LinkedList<Double> rowProbs = new LinkedList<Double>(); // a list of the factor probabilities.
 			int indexToDuplicate = 0;// the index to which the row is duplicated
 			boolean firstEqualsSign = false;
+			String[] newRow = new String[n.getParents().size() + 2];
 			for (;col < n.getTable().iloc(r).length;) {//columns of cpt
 				// the row has the parents values and the variable value with the probability.
-				String[] newRow = new String[n.getParents().size() + 2];
 				int k=indexToDuplicate;
 				int indexNextRow=col;// the index which we start to write the new values of a duplicated row.
 				while(!n.getTable().iloc(r)[indexNextRow].contains(".") && indexNextRow < n.getTable().iloc(r).length) {// runs on r row
@@ -216,21 +216,23 @@ public class Factor{
 	 */
 	public Factor removeColumn(String col) {
 		Set<String> headerCol = new HashSet<>(this.headerColumns);
-		headerCol.remove(col);
+		if(headerCol.remove(col)) {
 		Factor returnFactor= new Factor(headerCol,this.id);
 		for(int row=0;row<this.table.size();row++) {
-		String[] newRow= new String [this.headerColumns.size()];
-		int col_num=0;
-		for(int c=0;c<this.headerColumns.size();c++) { 
-			if(!this.getVariableByPosition(c).equals(col)) {
-				newRow[col_num]=this.iloc(row)[c];
-				col_num++;
+			String[] newRow= new String [this.headerColumns.size()];
+			int col_num=0;
+			for(int c=0;c<this.headerColumns.size();c++) { 
+				if(!this.getVariableByPosition(c).equals(col)) {
+					newRow[col_num]=this.iloc(row)[c];
+					col_num++;
+				}
 			}
+			newRow[col_num]= ""+(this.RowProb(row));
+			returnFactor.addRow(newRow);
 		}
-		newRow[col_num]= ""+(this.RowProb(row));
-		returnFactor.addRow(newRow);
-	}
 		return returnFactor;
+		}
+		else {return this;}
 	}
 	/**
 	 * finding the variable column index
@@ -267,35 +269,39 @@ public class Factor{
 	 * @return new CPT table in accordance to the condition
 	 */
 	public void restrictFactor(ArrayList<String> conditions) {
-		ArrayList<String[]> result = new ArrayList<String[]>(); //(this.table);
-		int foundVar = 0;
-		Set<String> headerColumns = this.headerColumns;
-		for (String condition : conditions) {
-			int varIndex = getPositionByVariable(condition.substring(0,condition.indexOf("=")));
-			if(varIndex < headerColumns.size()) {
-				foundVar++;
-				for (int i = 0; i < this.table.size(); i++) {
-					if(this.iloc(i)[varIndex].equals(condition.substring(condition.indexOf("=")+1))) {
-						//add only the row that uphold the specific evidence
-						result.add(this.iloc(i));
+		if(!conditions.isEmpty()) {
+			ArrayList<String[]> result = new ArrayList<String[]>(); //(this.table);
+			int foundVar = 0;
+			Set<String> headerColumns = this.headerColumns;
+			for (String condition : conditions) {
+				int varIndex = getPositionByVariable(condition.substring(0,condition.indexOf("=")));
+				if(varIndex < headerColumns.size()) {
+					foundVar++;
+					for (int i = 0; i < this.table.size(); i++) {
+						if(this.iloc(i)[varIndex].equals(condition.substring(condition.indexOf("=")+1))) {
+							//add only the row that uphold the specific evidence
+							result.add(this.iloc(i));
+						}
 					}
 				}
 			}
-		}
-		if(foundVar == 1) {
-			this.indexToRow.clear();
-			for (int i = 0; i < result.size(); i++) {
-				this.indexToRow.put(i,result.get(i));
+			////duplicate code////
+			if(foundVar == 1) {
+				this.indexToRow.clear();
+				for (int i = 0; i < result.size(); i++) {
+					this.indexToRow.put(i,result.get(i));
+				}
 			}
-		}
-		if(foundVar > 1) { // stay only the duplicated row
-			result = stayDuplicatedRow(result);
-			this.indexToRow.clear();
-			for (int i = 0; i < result.size(); i++) {
-				this.indexToRow.put(i,result.get(i));
+			if(foundVar > 1) { // stay only the duplicated row
+				result = stayDuplicatedRow(result);
+				this.indexToRow.clear();
+				for (int i = 0; i < result.size(); i++) {
+					this.indexToRow.put(i,result.get(i));
+				}
 			}
+			this.table = (result.size() == 0) ? this.table : result;
 		}
-		this.table = (result.size() == 0) ? this.table : result;
+
 	}
 	/*
 	 * in case that we have more then 1 condition we need to save just the rows that uphold the all condition

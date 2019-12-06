@@ -40,18 +40,28 @@ public class VariableElimination {
 		}
 		this.JoinOrder= new PriorityQueue<String>();
 		request = request.replace("P(", "");
+
 		String[] splitToInsertCalcOrder = request.split("\\),");
-		String[] order = splitToInsertCalcOrder[1].split("-");
-		for (int i = 0; i < order.length; i++) {
-			this.JoinOrder.add(order[i]);
+		try {
+			String[] order = splitToInsertCalcOrder[1].split("-");
+			for (int i = 0; i < order.length; i++) {
+				this.JoinOrder.add(order[i]);
+			}
+		}
+		catch (Exception e) {//join order = null
 		}
 		this.E = new ArrayList<String>();
 		String[] splitToInsert = splitToInsertCalcOrder[0].split("\\|");
 		this.Q= splitToInsert[0];
-		String[] evidences = splitToInsert[1].split(",");
-		for (int i = 0; i < evidences.length; i++) {
-			this.E.add(evidences[i]);
+		try {
+			String[] evidences = splitToInsert[1].split(",");
+			for (int i = 0; i < evidences.length; i++) {
+				this.E.add(evidences[i]);
+			}
 		}
+		catch (Exception e) { //evidence array is empty
+		}
+
 		//creating factors
 		this.Factors = new ArrayList<Factor>();
 		for(Iterator<NBnode> iterator = this.bn.getNodesList().iterator(); iterator.hasNext();) {
@@ -66,14 +76,21 @@ public class VariableElimination {
 			}
 		}
 		for (int i = 0; i < this.Factors.size(); i++) {
-			Factor pointer = removeSameValuesColumn(this.Factors.get(i));
-			this.Factors.set(i,(pointer != null) ? pointer : this.Factors.get(i));
+			for (Iterator<String> iterator = E.iterator(); iterator.hasNext();) {
+				String col = (String) iterator.next();
+				this.Factors.set(i,this.Factors.get(i).removeColumn(col.substring(0,col.indexOf("="))));
+			}
+			//			Factor pointer = removeSameValuesColumn(this.Factors.get(i));
+			//			this.Factors.set(i,(pointer != null) ? pointer : this.Factors.get(i));
 		}
 	}
 	private boolean isEvidence(String e) { //return true is the node is evidence and false otherwise
-		for (Iterator<String> iterator = this.E.iterator(); iterator.hasNext();) {
-			String evidence = (String) iterator.next();
-			if (evidence.contains(e)) return true;
+		if (!this.E.isEmpty()) {
+			for (Iterator<String> iterator = this.E.iterator(); iterator.hasNext();) {
+				String evidence = (String) iterator.next();
+				if (evidence.contains(e)) return true;
+			}
+			return false;
 		}
 		return false;
 	}
@@ -95,45 +112,6 @@ public class VariableElimination {
 		}
 		return false;
 	}
-	private Factor removeSameValuesColumn(Factor f)
-	{
-		Factor returnFactor=null;
-		for(int col=0;col<f.getHeaderColumns().size();col++) 
-		{
-			boolean flag=true;
-			String value=f.iloc(0)[col];
-			for(int rows=1;rows<f.getTable().size();rows++) {
-				if(!f.iloc(rows)[col].equals(value)) {
-					flag=false;
-					break;
-				}
-			}
-			if(flag)
-			{
-				Set<String> newHeaderColumns= new HashSet <String>();
-				for (Iterator<String> iterator = f.getHeaderColumns().iterator(); iterator.hasNext();) {
-					String tempVar= iterator.next();
-					if(!tempVar.equals(f.getVariableByPosition(col)))
-						newHeaderColumns.add(tempVar);
-				}
-				returnFactor= new Factor (newHeaderColumns,f.getId());
-				for(int r=0;r<f.getTable().size();r++) {
-					String[] newRow= new String [f.getHeaderColumns().size()];
-					int rowCol=0;
-					for(int c=0;c<f.getHeaderColumns().size();c++) 
-						if(c!=col) {
-							newRow[rowCol]=f.iloc(r)[c];
-							rowCol++;
-						}
-					newRow[rowCol]=""+f.RowProb(r);
-					returnFactor.addRow(newRow);
-
-				}
-			}
-		}
-		return returnFactor;
-	}
-
 	/*
 	 * return the last factor from the list factors
 	 */
@@ -300,7 +278,7 @@ public class VariableElimination {
 								newRow[c2]=factor2.iloc(rows2)[c2];
 							returnFactor.addRow(newRow);
 							double newProb =factor2.RowProb(rows2)*factor1.RowProb(rows1);
-						//	this.numOfMul++;
+							//	this.numOfMul++;
 							returnFactor.iloc(returnFactor.getRowsNumber()-1)[returnFactor.getHeaderColumns().size()]=""+newProb;
 						}
 						else {
@@ -316,7 +294,7 @@ public class VariableElimination {
 								}
 							}
 							newRow[rowCol]= ""+factor2.RowProb(rows2)*factor1.RowProb(rows1);
-						//	this.numOfMul++;
+							//	this.numOfMul++;
 							returnFactor.addRow(newRow);
 						}
 					}
@@ -326,33 +304,40 @@ public class VariableElimination {
 		if(this.printActions) System.out.println("join: "+factor1.getId()+" with "+factor2.getId()+":\n" + returnFactor.toString() + "\nnumOfAdd=" +this.numOfAdd + "\tnumOfMul= "+this.numOfMul +"\n______________________________________\n");
 		return returnFactor;
 	}
-	private Factor eliminate(Factor factor, String variable) {
-
+	private Factor eliminate(Factor factor, String variable) { 
+		//maybe an error if the values of the variable to eliminate greater then 2
 		factor = factor.removeColumn(variable);
 		Factor returnFactor = new Factor(factor.getHeaderColumns(),factor.getId());
-		for(int rows1=0;rows1<factor.getTable().size();rows1++)
+		int stop =factor.getTable().size();
+		boolean flag = true;
+		for(int rows1=0;rows1<stop;rows1++)
 		{
+			String[] newRow = new String [factor.getHeaderColumns().size()+1];
+			double sumProb = factor.RowProb(factor.iloc(rows1));
 			for(int nextRows=rows1+1;nextRows<factor.getTable().size();nextRows++) 
 			{
 				for( int c=0;c<factor.getHeaderColumns().size();c++)
 				{
-					if(!factor.iloc(rows1)[c].equals(factor.iloc(nextRows)[c]))
-						break;	
-					if(factor.iloc(rows1)[c].equals(factor.iloc(nextRows)[c])&&(c==factor.getHeaderColumns().size()-1))
+					if(!factor.iloc(rows1)[c].equals(factor.iloc(nextRows)[c])) break;
+					int col_num=0;
+					if(c==factor.getHeaderColumns().size()-1)
 					{
-						String[] newRow= new String [factor.getHeaderColumns().size()+1];
-						int col_num=0;
+						if(flag) {stop = nextRows; flag = false;}
 						for(c=0;c<factor.getHeaderColumns().size();c++) { 
 							newRow[col_num]=factor.iloc(rows1)[c];
 							col_num++;
 						}
-						newRow[col_num]= ""+(factor.RowProb(rows1)+factor.RowProb(nextRows));
+						sumProb += factor.RowProb(nextRows);
 						this.numOfAdd++;
-						returnFactor.addRow(newRow);
 					}
+					
 				}
 			}
+			returnFactor.addRow(newRow);
+			returnFactor.setRowProb(rows1, sumProb);
 		}
+//		this.numOfAdd += returnFactor.getRowsNumber();
+
 		if(this.printActions) System.out.println("eliminate " +variable+" from "+returnFactor.getId()+"\n" + returnFactor.toString() + "\nnumOfAdd=" +this.numOfAdd + "\tnumOfMul= "+this.numOfMul +"\n______________________________________\n");
 		return returnFactor;
 	}

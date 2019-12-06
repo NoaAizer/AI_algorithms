@@ -27,7 +27,6 @@ public class getInput {
 				if(strLine.contains("P(")) {
 					this.veList.add(new VariableElimination(strLine,this.bn));
 				}
-				//				System.out.println("line:"+i);
 			}
 			br.close();
 
