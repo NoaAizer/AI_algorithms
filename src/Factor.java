@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -12,7 +12,7 @@ public class Factor{
 	private String name;
 	private int RowsNumber;
 	private HashMap<Integer,String[]>indexToRow;
-	private Set<String> headerColumns;
+	private LinkedHashSet<String> headerColumns;
 	private ArrayList<String[]> table;
 
 	/**
@@ -22,16 +22,16 @@ public class Factor{
 	public Factor(NBnode n,int id) {
 		this.id = id;
 		StringBuilder SB = new StringBuilder();
-		SB.append(n.getName());
 		if(n.parents != null) {
 			for (int i = 0; i < n.parents.size(); i++) {
 				SB.append("," + n.parents.get(i).getName());
 			}
 		}
-		this.name = SB.substring(0);
+		SB.append("," + n.getName());
+		this.name = SB.substring(1);
 		this.RowsNumber = 0;
 		this.indexToRow= new HashMap<Integer,String[]>();
-		this.headerColumns= new HashSet<String>();
+		this.headerColumns= new LinkedHashSet<String>();
 		this.headerColumns.addAll(n.getTable().getHeaderColumns());
 		this.table= new ArrayList<String[]>();
 		for (int r = 0; r < n.getTable().getRowsNumber(); r++) {//rows of cpt
@@ -81,7 +81,7 @@ public class Factor{
 	 * creating empty new factor with just columns
 	 * @param HeaderColumns
 	 */
-	public Factor(Set<String> HeaderColumns,int id) {
+	public Factor(LinkedHashSet<String> HeaderColumns,int id) {
 		this.id = id;
 		StringBuilder SB = new StringBuilder();
 		if(HeaderColumns != null) {
@@ -92,7 +92,7 @@ public class Factor{
 		this.name = SB.substring(0);
 		this.RowsNumber =0;
 		this.indexToRow= new HashMap<Integer,String[]>();
-		this.headerColumns= new HashSet<String>(HeaderColumns);
+		this.headerColumns= new LinkedHashSet<String>(HeaderColumns);
 		this.table= new ArrayList<String[]>();
 	}
 
@@ -119,7 +119,7 @@ public class Factor{
 	 * Header Column getter
 	 * @return a list of the variables of the factor
 	 */
-	public Set<String> getHeaderColumns() {
+	public LinkedHashSet<String> getHeaderColumns() {
 		return headerColumns;
 	}
 	/**
@@ -215,22 +215,22 @@ public class Factor{
 	 * @return a new factor without the column.
 	 */
 	public Factor removeColumn(String col) {
-		Set<String> headerCol = new HashSet<>(this.headerColumns);
+		LinkedHashSet<String> headerCol = new LinkedHashSet<>(this.headerColumns);
 		if(headerCol.remove(col)) {
-		Factor returnFactor= new Factor(headerCol,this.id);
-		for(int row=0;row<this.table.size();row++) {
-			String[] newRow= new String [this.headerColumns.size()];
-			int col_num=0;
-			for(int c=0;c<this.headerColumns.size();c++) { 
-				if(!this.getVariableByPosition(c).equals(col)) {
-					newRow[col_num]=this.iloc(row)[c];
-					col_num++;
+			Factor returnFactor= new Factor(headerCol,this.id);
+			for(int row=0;row<this.table.size();row++) {
+				String[] newRow= new String [this.headerColumns.size()];
+				int col_num=0;
+				for(int c=0;c<this.headerColumns.size();c++) { 
+					if(!this.getVariableByPosition(c).equals(col)) {
+						newRow[col_num]=this.iloc(row)[c];
+						col_num++;
+					}
 				}
+				newRow[col_num]= ""+(this.RowProb(row));
+				returnFactor.addRow(newRow);
 			}
-			newRow[col_num]= ""+(this.RowProb(row));
-			returnFactor.addRow(newRow);
-		}
-		return returnFactor;
+			return returnFactor;
 		}
 		else {return this;}
 	}
@@ -272,7 +272,7 @@ public class Factor{
 		if(!conditions.isEmpty()) {
 			ArrayList<String[]> result = new ArrayList<String[]>(); //(this.table);
 			int foundVar = 0;
-			Set<String> headerColumns = this.headerColumns;
+			LinkedHashSet<String> headerColumns = this.headerColumns;
 			for (String condition : conditions) {
 				int varIndex = getPositionByVariable(condition.substring(0,condition.indexOf("=")));
 				if(varIndex < headerColumns.size()) {
