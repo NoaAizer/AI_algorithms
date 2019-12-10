@@ -3,10 +3,13 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 public class Main {
-	
-	
+
+	/**
+	 * Run the algorithm on the 2 given inputs, print the results
+	 * and create 2 files with results.
+	 */
 	public static void main(String[] args) {
-		
+
 		getInput Input1 = new getInput("input.txt");
 		bayesianNet bn1 = Input1.SetNet();
 		System.out.println(bn1.toString());
@@ -34,6 +37,5 @@ public class Main {
 			System.out.println(Arrays.toString(ve.start("output2.txt")));
 			System.out.println("------------------------------------------------new query-------");
 		}
-
 	}
 }

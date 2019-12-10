@@ -10,10 +10,10 @@ public class NBnode {
 	private Cpt cptTable;
 	ArrayList<NBnode> parents = new ArrayList<NBnode>();
 	ArrayList<NBnode> childs = new ArrayList<NBnode>();
-	//private int type;
+	
 	/**
 	 * Constructor
-	 * @param name represents the node name
+	 * @param name represents the node name.
 	 */
 	public NBnode(String name) {
 		this.name = name;
@@ -23,9 +23,9 @@ public class NBnode {
 		this.cptTable = new Cpt();
 	}
 	/**
-	 * build the same NBnode except for the cpt
-	 * @param n the original node
-	 * @param conditions the condition
+	 * Builds the same NBnode except for the cpt.
+	 * @param n the original node.
+	 * @param conditions is a list of the condition.
 	 */
 	public NBnode(NBnode n,ArrayList<String> conditions) {
 		this.name = n.name;
@@ -38,13 +38,14 @@ public class NBnode {
 		this.cptTable = new Cpt();
 		this.cptTable = n.CptByCondition(conditions);
 	}
+
 	/**
-	 * 
-	 * @param where condition
-	 * @return new CPT table in accordance to the condition
+	 * Creates new CPT table according to the conditions.
+	 * @param conditions represents the required conditions (such as B=true. e.g).
+	 * @return a new CPT table.
 	 */
 	public Cpt CptByCondition(ArrayList<String> conditions) {
-		Cpt result = new Cpt(); //(this.table);
+		Cpt result = new Cpt();
 		int foundVar = 0;
 		for (String condition : conditions) {
 			int varIndex = 0;
@@ -61,15 +62,21 @@ public class NBnode {
 				}
 			}
 		}
-		if(foundVar > 1) { // stay only the duplicated row
+		if(foundVar > 1) { // leaves only the duplicate row
 			result = stayDuplicatedRow(result);
 		}
 		return (result.getTable().size() == 0) ? this.cptTable : result;
 	}
+	
+	/**
+	 * Leaves duplicate rows.
+	 * @param table is a given CPT table to check.
+	 * @return a new CPT table.
+	 */
 	private Cpt stayDuplicatedRow(Cpt table) {
 		Cpt result = new Cpt();
 		Map<String[], Integer> nameAndCount = new HashMap<>();
-		// build hash table with count
+		// build hash table with a counter
 		for (String[] row : table.getTable()) {
 			Integer count = nameAndCount.get(row);
 			if (count == null) { nameAndCount.put(row, 1); }
@@ -84,57 +91,56 @@ public class NBnode {
 		} 
 		return result;
 	}
-	//	/**
-	//	 * Type getter
-	//	 * @return the type of the node
-	//	 */
-	//	public int getType() {
-	//		return type;
-	//	}
+
 	/**
-	 * Childs getter
+	 * Childs getter.
 	 * @return a list with the node's childs.
 	 */
 	public ArrayList<NBnode> getChilds() {
 		return childs;
 	}
+	
 	/**
-	 * Name getter
+	 * Name getter.
 	 * @return the name of the node variable.
 	 */
 	public String getName() {
 		return name;
 	}
+	
 	/**
-	 * Cpt getter
+	 * CPT table getter.
 	 * @return a table represents the node.
 	 */
 	public Cpt getTable() {
 		return cptTable;
 	}
+	
 	/**
-	 * Values getter
+	 * Values getter.
 	 * @return the values the node has.
 	 */
 	public ArrayList<String> getValues() {
 		return values;
 	}
 	/**
-	 * Parents getter
+	 * Parents getter.
 	 * @return the parents the node has.
 	 */
 	public ArrayList<NBnode> getParents() {
 		return parents;
 	}
+	
 	/**
 	 * @return the last value in the values list of the node.
 	 */
 	public String getLastValue() {
 		return this.values.get(this.values.size()-1);
 	}
+	
 	/**
-	 * returns a string that represnts the node:
-	 * name, values list, parents list, childs list and the cpt table of the node.
+	 * Returns a string that represents the node:
+	 * name, values list, parents list, childs list and the CPT table of the node.
 	 */
 	@Override
 	public String toString() {

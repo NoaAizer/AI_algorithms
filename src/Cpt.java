@@ -20,7 +20,7 @@ public class Cpt {
 	}
 	/**
 	 * Copy constructor
-	 * @param c is a given cpt
+	 * @param c is a given CPT.
 	 */
 	public Cpt(Cpt c) {
 		this.RowsNumber = c.RowsNumber;
@@ -33,41 +33,41 @@ public class Cpt {
 		
 	}
 	/**
-	 * Header columns getter
-	 * @return a list of cpt's column headers (the variables names)
+	 * Header columns getter.
+	 * @return a list of cpt's column headers (the variables names).
 	 */
 	public ArrayList<String> getHeaderColumns() {
 		return headerColumns;
 	}
 	/**
-	 * Table getter
-	 * @return the cpt table of a node.
+	 * Table getter.
+	 * @return the CPT table of a node.
 	 */
 	public ArrayList<String[]> getTable() {
 		return this.table;
 	}
 	/**
-	 * Rows number getter
-	 * @return the number of rows the cpt table has.
+	 * Rows number getter.
+	 * @return the number of rows the CPT table has.
 	 */
 	public int getRowsNumber() {
 		return this.RowsNumber;
 	}
 	/**
-	 * @return the last row of the cpt table
+	 * @return the last row of the CPT table.
 	 */
 	public String[] getLastRow() {
 		return this.iloc(this.getRowsNumber()-1);
 	}
 	/**
-	 * @return the last row index in the cpt table
+	 * @return the last row index in the CPT table.
 	 */
 	public int getLastRowIndex() {
 		return this.getRowsNumber()-1;
 	}
 	/**
-	 * add a new row to the cpt table
-	 * @param row is a string array with values and a probability
+	 * Adds a new row to the CPT table.
+	 * @param row represents string array with values and a probability.
 	 */
 	public void addRow(String[] row) {
 		this.table.add(row);
@@ -75,15 +75,15 @@ public class Cpt {
 		this.RowsNumber++;
 	}
 	/**
-	 * Returns a row of the cpt table by a given row index.
-	 * @param i
+	 * Returns a row of the CPT table by a given row index.
+	 * @param i represents the index.
 	 * @return the i row of the table.
 	 */
 	public String[] iloc(int i) {
 		return this.indexToRow.get(i);
 	}
 	/**
-	 * Returns a string that represents the cpt table with the headers.
+	 * Returns a string that represents the CPT table with the headers.
 	 */
 	@Override
 	public String toString() {

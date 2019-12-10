@@ -1,17 +1,26 @@
- import java.io.BufferedReader;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class getInput {
-	private String pathFile;//"C:\\Users\\idsha\\eclipse-workspace\\Algoritmim_in_AI\\input.txt";
+
+	private String pathFile;
 	private bayesianNet bn=null;
 	private ArrayList<VariableElimination> veList=null;
 
+	/**
+	 * constructor
+	 * @param dataFile- a path to the file
+	 */
 	public getInput(String dataFile) {
 		this.pathFile = dataFile;
 	}
+	/**
+	 * Queries set
+	 * @return an array list of all the queries from the input file.
+	 */
 	public ArrayList<VariableElimination> SetQueries() {
 		try {
 			FileInputStream fstream = new FileInputStream(this.pathFile);
@@ -20,7 +29,6 @@ public class getInput {
 
 			String strLine;
 			while ((strLine = br.readLine()) != null)   {
-				//			System.out.println (strLine);
 				if(strLine.contains("Queries")) {
 					this.veList = new ArrayList<VariableElimination>();
 				}
@@ -36,8 +44,8 @@ public class getInput {
 		return this.veList;
 	}
 	/** 
-	 * Gets a file and creats a bayesian net with the data.
-	 * @param dataFile the given file
+	 *  creates a bayesian net with the data from the input file.
+	 * @param dataFile is the given file
 	 */
 	public bayesianNet SetNet() {
 		try {
@@ -49,8 +57,6 @@ public class getInput {
 			String strLine;
 			NBnode temp=null;
 			while ((strLine = br.readLine()) != null)   {
-				//			System.out.println (strLine);
-
 				if (i==0) {
 					bn = new bayesianNet(strLine);
 				}
@@ -72,7 +78,6 @@ public class getInput {
 						temp.getValues().add(values[j]);
 					}
 				}
-
 				if(strLine.contains("Parents: ")){
 					if (!strLine.contains("none")){
 						strLine = strLine.replace("Parents: ","");
@@ -86,13 +91,10 @@ public class getInput {
 					}
 					temp.getTable().getHeaderColumns().add(temp.getName());
 				}
-
 				if(strLine.contains("=")){
 					String[] row = strLine.split(",");
 					temp.getTable().addRow(row);
 				}
-
-				//				System.out.println("line:"+i);
 				i++;
 				if(strLine.contains("Queries")) {break;}
 			}

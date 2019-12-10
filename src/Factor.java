@@ -9,11 +9,11 @@ import java.util.Map.Entry;
 
 public class Factor{
 	private int id;
-	private String name;
-	private int RowsNumber;
-	private HashMap<Integer,String[]>indexToRow;
-	private LinkedHashSet<String> headerColumns;
-	private ArrayList<String[]> table;
+	private String name;// the variables of the factor
+	private int RowsNumber;// the number of rows in the table of the factor
+	private HashMap<Integer,String[]>indexToRow;// getting the row by index
+	private LinkedHashSet<String> headerColumns;// the variables in the table
+	private ArrayList<String[]> table;// the table of the factor
 
 	/**
 	 * Constructor
@@ -72,14 +72,18 @@ public class Factor{
 			this.addRow(lastRow);
 		}
 	}
+	/**
+	 * Id getter
+	 * @return the id number of the factor.
+	 */
 	public int getId() {
 		return id;
 	}
 
 	/**
-	 * Contractor 
-	 * creating empty new factor with just columns
-	 * @param HeaderColumns
+	 * Contractor - creating an empty new factor only with columns headers.
+	 * @param HeaderColumns represents the variables of the factor table.
+	 * @param id represents the factor id.
 	 */
 	public Factor(LinkedHashSet<String> HeaderColumns,int id) {
 		this.id = id;
@@ -95,14 +99,28 @@ public class Factor{
 		this.headerColumns= new LinkedHashSet<String>(HeaderColumns);
 		this.table= new ArrayList<String[]>();
 	}
-
+	
+	/**
+	 * Checks if 2 given factors are the same.
+	 * @param f represents a given factor.
+	 * @return True- if equals , False- not equals.
+	 */
 	public boolean equals (Factor f) {
 		return this.id == f.id;
 	}
+	
+	/**
+	 * Table getter
+	 * @return the factor table.
+	 */
 	public ArrayList<String[]> getTable() {
 		return table;
 	}
-
+	
+	/**
+	 * Create a table.
+	 * @param table represents a given table we want to set.
+	 */
 	public void setTable(ArrayList<String[]> table) {
 		for (Iterator<String[]> iterator = table.iterator(); iterator.hasNext();) {
 			String[] row = (String[]) iterator.next();
@@ -116,16 +134,17 @@ public class Factor{
 	}
 
 	/**
-	 * Header Column getter
+	 * Header Column getter.
 	 * @return a list of the variables of the factor
 	 */
 	public LinkedHashSet<String> getHeaderColumns() {
 		return headerColumns;
 	}
+	
 	/**
-	 * sum all the probabilities of the variable with the same parents values
+	 * Sum all the probabilities of the variable with the same parents values.
 	 * @param probs represents the probabilities of the variable values.
-	 * @return
+	 * @return the summarize of the probabilities.
 	 */
 	private double sumOfProb(LinkedList<Double> probs) {
 		double answer = 0;
@@ -135,17 +154,19 @@ public class Factor{
 		}
 		return answer;
 	}
+	
 	/**
-	 * Adds a row to the table
-	 * @param row is the new row 
+	 * Adds a new row to the table.
+	 * @param row represents the new row.
 	 */
 	public void addRow(String[] row) {
 		this.table.add(row);
 		this.indexToRow.put(this.RowsNumber,row);
 		this.RowsNumber++;
 	}
+	
 	/**
-	 * Duplicate the start of the row for the rows that have the same parents values.
+	 * Duplicates the start of a row of the rows that have the same parents values.
 	 * @param n represents the node.
 	 * @param index represents the indexToDuplicate.
 	 * @return the start of the duplicated row.
@@ -157,29 +178,33 @@ public class Factor{
 		}
 		return startNewRow;
 	}
+	
 	/**
 	 * Returns a row of the cpt table by a given row index.
-	 * @param i
+	 * @param i represents the index.
 	 * @return the i row of the table.
 	 */
 	public String[] iloc(int i) {
 		return this.indexToRow.get(i);
 	}
+	
 	/**
-	 * @return the last row of the cpt table
+	 * @return the last row of the cpt table.
 	 */
 	public String[] getLastRow() {
 		return this.iloc(this.RowsNumber-1);
 	}
+	
 	/**
-	 * set the probability of a row
+	 * Sets the probability of a row.
 	 * @param index represents the row's index.
 	 */
 	public void setRowProb(int index, double prob) {
 		this.iloc(index)[this.iloc(index).length-1] = "" +prob;
 	}
+	
 	/**
-	 * rows number getter
+	 * Rows number getter
 	 * @return the number of rows in the factor's table.
 	 */
 	public int getRowsNumber() {
@@ -189,29 +214,32 @@ public class Factor{
 	/**
 	 * Returns the probability of a row by the index.
 	 * @param index represents the row's index.
-	 * @return the probability
+	 * @return the probability.
 	 */
 
 	public double RowProb(int index) {
 		return Double.valueOf(this.iloc(index)[this.iloc(index).length-1]);
 	}
+	
 	/**
-	 * Returns the probability of specific row by the index.
-	 * @param row a row in the factor
-	 * @return the probability
+	 * Returns the probability of a specific row by the index.
+	 * @param row represents a row in the factor.
+	 * @return the probability.
 	 */
 	public double RowProb(String[] row) {
 		return Double.valueOf(row[row.length-1]);
 	}
-	/*
-	 * the size of the factor
+	
+	/**
+	 * @return the size of the factor table.
 	 */
 	public int size() {
 		return this.table.size();
 	}
+	
 	/**
-	 * remove a column for the table by a variable name
-	 * @param col represents the variable column name;
+	 * Removes a column from the table by a variable name.
+	 * @param col represents the variable column name.
 	 * @return a new factor without the column.
 	 */
 	public Factor removeColumn(String col) {
@@ -234,10 +262,11 @@ public class Factor{
 		}
 		else {return this;}
 	}
+	
 	/**
-	 * finding the variable column index
-	 * @param variable
-	 * @return the position of the columns
+	 * Finds the variable column index.
+	 * @param variable represents the given variable.
+	 * @return the position of the column.
 	 */
 	public int getPositionByVariable(String variable) {
 		int varIndex = 0;
@@ -246,10 +275,11 @@ public class Factor{
 		}
 		return varIndex;
 	}
+	
 	/**
-	 * finding the variable by the column index
-	 * @param column 
-	 * @return the variable in the given columns
+	 * Finds the variable by the column index.
+	 * @param column represents the column index.
+	 * @return the variable in the given column.
 	 */
 	public String getVariableByPosition(int column) {
 		int varIndex = 0;
@@ -264,9 +294,8 @@ public class Factor{
 	}
 
 	/**
-	 * 
-	 * @param where condition
-	 * @return new CPT table in accordance to the condition
+	 * Restricts a factor from given conditions.
+	 * @param conditions represent a list of conditions (such as B=true..)
 	 */
 	public void restrictFactor(ArrayList<String> conditions) {
 		if(!conditions.isEmpty()) {
@@ -285,15 +314,10 @@ public class Factor{
 					}
 				}
 			}
-			////duplicate code////
-			if(foundVar == 1) {
-				this.indexToRow.clear();
-				for (int i = 0; i < result.size(); i++) {
-					this.indexToRow.put(i,result.get(i));
-				}
-			}
-			if(foundVar > 1) { // stay only the duplicated row
-				result = stayDuplicatedRow(result);
+			//updates the indexToRow hash map
+			if(foundVar >= 1) {
+				if(foundVar>1)
+					result = stayDuplicatedRow(result);
 				this.indexToRow.clear();
 				for (int i = 0; i < result.size(); i++) {
 					this.indexToRow.put(i,result.get(i));
@@ -301,11 +325,12 @@ public class Factor{
 			}
 			this.table = (result.size() == 0) ? this.table : result;
 		}
-
 	}
-	/*
-	 * in case that we have more then 1 condition we need to save just the rows that uphold the all condition
-	 * @param table the result before the changes
+	
+	/**
+	 * In case that we have more then 1 condition we need to save only the rows that uphold the all condition.
+	 * @param table represents the result before the changes.
+	 * @return the table after the change.
 	 */
 	private ArrayList<String[]> stayDuplicatedRow(ArrayList<String[]> table) {
 		ArrayList<String[]> result = new ArrayList<String[]>();
@@ -325,6 +350,7 @@ public class Factor{
 		} 
 		return result;
 	}
+	
 	/**
 	 * Returns a string that represents the factor.
 	 * (with the factor name and  table).

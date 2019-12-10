@@ -14,7 +14,7 @@ import java.text.DecimalFormat;
 /**
  * implement VariableElimination algorithm.
  * - each query has his one VariableElimination object.
- * @author ido shapira & noa aizer
+ * @author Ido Shapira & Noa Aizer
  *
  */
 public class VariableElimination {
@@ -22,19 +22,22 @@ public class VariableElimination {
 	private String Q;// the variable of the query
 	private ArrayList<String> E;// a list of the evidences
 	private ArrayList<String> JoinOrder;// the order of the joining
-	ArrayList<Factor> Factors;
+	ArrayList<Factor> Factors;// a list of the factors
 	private bayesianNet bn;
-	private int numOfMul;
-	private int numOfAdd;
+	private int numOfMul;// Counts the multiplication operations that occur during the algorithm
+	private int numOfAdd;// Counts the adding operations that occur during the algorithm
 	private HashMap<String,Integer> variableToValues;
 	public boolean printActions;
+	private boolean firstJoin;
+
 	/**
 	 * Constructor
 	 * @param request represents a query.
-	 * @param bn represents the bayesian net of a given query.
+	 * @param bn represents the Bayesian network of a given query.
 	 */
 	public VariableElimination(String request,bayesianNet bn)
 	{
+		this.firstJoin = false;
 		this.idFactor = 1;
 		this.bn = bn;
 		this.variableToValues = new HashMap<String,Integer>();
@@ -69,16 +72,17 @@ public class VariableElimination {
 		//creating factors
 		this.Factors = new ArrayList<Factor>();
 		for(Iterator<NBnode> iterator = this.bn.getNodesList().iterator(); iterator.hasNext();) {
-			NBnode n = (NBnode) iterator.next(); //new NBnode ((NBnode) iterator.next(),this.E);
+			NBnode n = (NBnode) iterator.next(); 
 			if(this.Q.contains(n.getName()) || isEvidence(n.getName()) || isAncestor(n)) {
-				//return true or false if we need to build for this node a factor
+				//returns true or false if we need to build for this node a factor
 				this.Factors.add(new Factor(n,this.idFactor++));
 				this.lastFactor().restrictFactor(this.E);
-				if(this.lastFactor().size() <= 1) { //if the factor is just evidence
+				if(this.lastFactor().size() <= 1) { //if the factor is just an evidence
 					this.Factors.remove(this.lastFactor());
 				}
 			}
 		}
+		//remove the columns of the evidences from the factors
 		for (int i = 0; i < this.Factors.size(); i++) {
 			for (Iterator<String> iterator = E.iterator(); iterator.hasNext();) {
 				String col = (String) iterator.next();
@@ -86,7 +90,13 @@ public class VariableElimination {
 			}
 		}
 	}
-	private boolean isEvidence(String e) { //return true is the node is evidence and false otherwise
+
+	/**
+	 * checks if a node is one of the evidences 
+	 * @param e represents an evidence
+	 * @return True if the node is an evidence, otherwise returns False
+	 */
+	private boolean isEvidence(String e) { 
 		if (!this.E.isEmpty()) {
 			for (Iterator<String> iterator = this.E.iterator(); iterator.hasNext();) {
 				String evidence = (String) iterator.next();
@@ -96,7 +106,13 @@ public class VariableElimination {
 		}
 		return false;
 	}
-	private boolean isAncestor(NBnode n) {//checking if the node is a ancestor of the Q or each evidence
+
+	/**
+	 * Checks whether the node is an ancestor of the Q or the evidences.
+	 * @param n represents a given node.
+	 * @return True if the node is an ancestor, otherwise returns False.
+	 */
+	private boolean isAncestor(NBnode n) {
 		for (Iterator<String> iterator = this.E.iterator(); iterator.hasNext();) {
 			String evidence = (String) iterator.next();
 			if(isParent(n,bn.getNodeByName(evidence.substring(0,evidence.indexOf("="))))) {
@@ -105,7 +121,14 @@ public class VariableElimination {
 		}
 		return isParent(n,bn.getNodeByName(Q.substring(0,Q.indexOf("="))));
 	}
-	private boolean isParent(NBnode ancestor,NBnode node) { //node = query/evidence in the start
+
+	/**
+	 * Checks whether the node is a parent of the Q or the evidences.
+	 * @param ancestor represents a node 
+	 * @param node represents query/evidence.
+	 * @return True if the node is a parent, otherwise returns False.
+	 */
+	private boolean isParent(NBnode ancestor,NBnode node) { 
 		if (node != null) {
 			if (node.getParents().contains(ancestor)) return true;
 			for (NBnode parent : node.parents) {
@@ -114,13 +137,20 @@ public class VariableElimination {
 		}
 		return false;
 	}
-	/*
-	 * return the last factor from the list factors
+
+	/**
+	 * @return the last Factor that entered into the factors list.
 	 */
 	public Factor lastFactor() {
 		return Factors.get(Factors.size()-1);
 	}
 
+	/**
+	 * Writes to result of algorithm to a file
+	 * @param result represents the result of the algorithm.
+	 *  Contains: the probability of a given query, amount of adding and amount of multiplication.
+	 * @param fileName represents the name of the new file.
+	 */
 	public static void writeToFile(String[] result ,String fileName){
 		try {
 			FileWriter fileWriter = new FileWriter(fileName, true);
@@ -134,12 +164,12 @@ public class VariableElimination {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	} 
 
-
 	/**
-	 * starting the variableElimination algorithm
+	 * Starts the Variable Elimination algorithm.
+	 * @param NameFile represents the name of the given parameters file.
+	 * @return an array with the results.
 	 */
 	public String[] start(String NameFile) {
 		numOfMul = 0;
@@ -165,6 +195,12 @@ public class VariableElimination {
 		writeToFile(results, NameFile);
 		return results;
 	}
+
+	/**
+	 * Gets the last factor and return the probability asked.
+	 * @param f represents a given factor.
+	 * @return the result of a query.
+	 */
 	public String getAnswer(Factor f) {
 		String[] splitQ = this.Q.split("=");
 		int colIndex=f.getPositionByVariable(splitQ[0]);
@@ -175,15 +211,15 @@ public class VariableElimination {
 				break;
 		}
 		double prob=f.RowProb(i);
-		DecimalFormat df= new DecimalFormat("#.#####");
+		DecimalFormat df= new DecimalFormat("#.#####");// only 5 decimal places.
 		df.setRoundingMode(RoundingMode.CEILING);
 		return df.format(prob);
-
 	}
+
 	/**
-	 * given a hidden variable and return list of factor that the hidden variable contains
-	 * @param hiddenVariable a hidden variable to search
-	 * @return list of factor that the hidden variable contains
+	 * Finds the factors that a hidden variable contains.
+	 * @param hiddenVariable represents a hidden variable to search.
+	 * @return a list of factors that the hidden variable contains.
 	 */
 	public ArrayList<Factor> factorsListByHiddenViarable(String hiddenVariable) {
 		ArrayList<Factor> result = new ArrayList<Factor>();
@@ -195,6 +231,12 @@ public class VariableElimination {
 		}
 		return result;
 	}
+
+	/**
+	 * Join all the factors of the hidden variables according to minimum actions order.
+	 * @param factorsList represents a list of the factors of the hidden variables.
+	 * @return the factor after all the joins operations.
+	 */
 	private Factor joinAll(ArrayList<Factor> factorsList) {
 		while(factorsList.size() > 1) {
 			Factor[] toJoin = minimumActions(factorsList);
@@ -206,11 +248,13 @@ public class VariableElimination {
 			return factorsList.get(0);
 		return null;
 	}
+
 	/**
-	 * get a factor list and return two factors that the join will be happen with a minimum actions
-	 * if there are two options the function will return the two factor with the smallest ascii code
-	 * @param factorsList
-	 * @return array with to factors
+	 * Finds 2 factors with the minimal multiplication actions.
+	 * If there are two options with the same amount of actions
+	 * the function will return the two factors with the minimal ASCII code.
+	 * @param factorsList the list of the factors.
+	 * @return two factors that their joining will happen with minimum actions.
 	 */
 	private Factor[] minimumActions(ArrayList<Factor> factorsList) {
 		HashMap<String,Integer> idToNumberOfActions = new HashMap<String,Integer>();
@@ -228,12 +272,13 @@ public class VariableElimination {
 			}
 		}
 		return findMinAction(idToNumberOfActions,nameToFactors);
-
 	}
+
 	/**
-	 * 
-	 * @param numberOfAction hash map that key is number of action and value is the an array of two factor.
-	 * @return the number of minimum action for join 
+	 * Find the minimal amount of actions required to join. 
+	 * @param numberOfAction represents a hash map that
+	 * the key is a number of action and the value is an array of two factors.
+	 * @return the minimal amount.
 	 */
 	private Factor[] findMinAction(HashMap<String,Integer> idToNumberOfActions,HashMap<String,Factor[]> nameToFactors) {
 		int minAction = Collections.min(idToNumberOfActions.values());
@@ -250,6 +295,11 @@ public class VariableElimination {
 		return nameToFactors.get(answer);
 	}
 
+	/**
+	 * Finds the ASCII value of a string.
+	 * @param sp represents the given string.
+	 * @return the ASCII value.
+	 */
 	private int asciiName(String[] sp)
 	{
 		int asciiValue =0;
@@ -262,6 +312,11 @@ public class VariableElimination {
 		return asciiValue;
 	}
 
+	/**
+	 * Converts a linked hash set to a string.
+	 * @param a represents a given linked hash set.
+	 * @return a string represents the set.
+	 */
 	private String setToString(LinkedHashSet<String> a) {
 		StringBuilder listString = new StringBuilder();
 
@@ -272,70 +327,87 @@ public class VariableElimination {
 		return listString.substring(0);
 	}
 
+	/**
+	 * Finds all the keys in a hash map with the same value.
+	 * @param idToNumberOfActions represents the given hash map to search.
+	 * @param value represents the given value.
+	 * @return the list of keys whose value matches the given value.
+	 */
 	private ArrayList<String> getAllKeysForValue(HashMap<String,Integer> idToNumberOfActions,int value) 
 	{
 		ArrayList<String> listOfKeys = null;
-
-		//Check if Map contains the given value
+		//Check if the Map contains the given value
 		if(idToNumberOfActions.containsValue(value))
 		{
 			// Create an Empty List
 			listOfKeys = new ArrayList<>();
-
 			// Iterate over each entry of map using entrySet
 			for (Map.Entry<String,Integer> entry : idToNumberOfActions.entrySet()) 
 			{
-				// Check if value matches with given value
+				// Checks if value matches with given value
 				if (entry.getValue().equals(value))
 				{
-					// Store the key from entry to the list
+					// Stores the key from entry to the list
 					listOfKeys.add(entry.getKey());
 				}
 			}
 		}
-		// Return the list of keys whose value matches with given value.
 		return listOfKeys;	
 	}
 
 	/**
-	 * @return number of actions to do join to f1 and f2 factors
+	 * Finds the amount of actions required to join f1 and f2 factors.
+	 * @param f1 the first factor
+	 * @param f2 the second factor
+	 * @return  the amount of actions.
 	 */
 	private int numberOfActions(Factor f1,Factor f2) {
 		LinkedHashSet<String> difference= new LinkedHashSet<String>();
 		int mul = 1;
 		int numOfRows = 0;
+		//Find the uncommon variables of 2 factors.
 		if (f1.getHeaderColumns().size() >f2.getHeaderColumns().size()) {
 			difference = new LinkedHashSet<String>(f2.getHeaderColumns()); 
 			difference.removeAll(f1.getHeaderColumns());
-			numOfRows = f1.size();
+			numOfRows = f1.size();// the number of rows in the larger table.
 		}
 		else {
 			difference = new LinkedHashSet<String>(f1.getHeaderColumns()); 
 			difference.removeAll(f2.getHeaderColumns());
 			numOfRows = f2.size();
 		}
+		//Finds the number of values the uncommon variables have.
 		for (Iterator<String> iterator = difference.iterator(); iterator.hasNext();) {
 			String var = (String) iterator.next();
 			mul *= this.variableToValues.get(var);
 		}
+		//Calculates the number of multiplication required.
 		if (difference.size() != 0)
 			return difference.size()*numOfRows*mul;
 		return numOfRows*mul;
 	}
+	/**
+	 * Retains the common variables from both factors.
+	 * @param factor1 represents the first factor
+	 * @param factor2 represents the second factor
+	 * @return a set of the common variables.
+	 */
 	private LinkedHashSet<String> getInter(Factor factor1, Factor factor2) { //factor1 < factor2
 		LinkedHashSet<String> intersection = new LinkedHashSet<String>(factor1.getHeaderColumns()); 
 		intersection.retainAll(factor2.getHeaderColumns()); 
 		return intersection;
 	}
+
 	/**
-	 * Join two factor by point wise product.
-	 * @param factor1
-	 * @param factor2
-	 * @returnA new factor will be generated form the two factors containing all variable involved.
-	 * Its probability will be the product of the two factors.
+	 * Join two factors, a new factor (contains all the variables from the 2 factors and new probabilities)
+	 *  will be generated from the joining.
+	 * @param factor1 represents the first factor.
+	 * @param factor2 represents the second factor.
+	 * @return the new factor.
 	 */
 	private Factor join(Factor factor1, Factor factor2) {
-		// To find union 
+		// To find the union of the variables. 
+		this.firstJoin = true;
 		LinkedHashSet<String> unionHeaderColumns;
 		if(factor1.getHeaderColumns().size()<factor2.getHeaderColumns().size()) {
 			unionHeaderColumns = new LinkedHashSet<String>(factor2.getHeaderColumns()); 
@@ -349,22 +421,27 @@ public class VariableElimination {
 		LinkedHashSet<String> inter= getInter(factor1,factor2);
 		int interArr[][]=new int[2][inter.size()];
 		int i=0;
+		//Finds the columns of the common variables in each of the factors.
 		for (Iterator<String> iterator = inter.iterator(); iterator.hasNext();i++)
 		{
 			String comVar= iterator.next();
 			interArr[0][i]=factor1.getPositionByVariable(comVar);
 			interArr[1][i]=factor2.getPositionByVariable(comVar);		
 		}
+		//Builds the common row of the 2 factors.
 		for(int rows1=0;rows1<factor1.getTable().size();rows1++)
 		{
 			for(int rows2=0;rows2<factor2.getTable().size();rows2++) 
 			{
 				for( i=0;i<inter.size();i++)
 				{
+					// if found an uncommon value in the row.
 					if(!factor2.iloc(rows2)[interArr[1][i]].equals(factor1.iloc(rows1)[interArr[0][i]]))
 						break;	
+					// if found the last common value of the row.
 					if(factor2.iloc(rows2)[interArr[1][i]].equals(factor1.iloc(rows1)[interArr[0][i]])&&(i==inter.size()-1))
 					{
+						//Use the variables of the larger factor and build the common row.
 						if(factor1.getHeaderColumns().size()<factor2.getHeaderColumns().size())
 						{
 							String[] newRow= new String [factor2.getHeaderColumns().size()+1];
@@ -372,7 +449,6 @@ public class VariableElimination {
 								newRow[c2]=factor2.iloc(rows2)[c2];
 							returnFactor.addRow(newRow);
 							double newProb =factor2.RowProb(rows2)*factor1.RowProb(rows1);
-							//	this.numOfMul++;
 							returnFactor.iloc(returnFactor.getRowsNumber()-1)[returnFactor.getHeaderColumns().size()]=""+newProb;
 						}
 						else {
@@ -387,8 +463,8 @@ public class VariableElimination {
 									rowCol++;
 								}
 							}
+							//Set the common probability in the new row.
 							newRow[rowCol]= ""+factor2.RowProb(rows2)*factor1.RowProb(rows1);
-							//	this.numOfMul++;
 							returnFactor.addRow(newRow);
 						}
 					}
@@ -398,51 +474,84 @@ public class VariableElimination {
 		if(this.printActions) System.out.println("join: "+factor1.getId()+" with "+factor2.getId()+":\n" + returnFactor.toString() + "\nnumOfAdd=" +this.numOfAdd + "\tnumOfMul= "+this.numOfMul +"\n______________________________________\n");
 		return returnFactor;
 	}
+
+	/**
+	 * Sum out the column of the hidden variable.
+	 * @param factor represents the given factor.
+	 * @param variable represents the hidden variable.
+	 * @return a new factor after the elimination.
+	 */
 	private Factor eliminate(Factor factor, String variable) { 
-		//maybe an error if the values of the variable to eliminate greater then 2
+		//Removes the column  of the hidden variable.
 		factor = factor.removeColumn(variable);
 		Factor returnFactor = new Factor(factor.getHeaderColumns(),factor.getId());
+
 		int stop =factor.getTable().size();
+		//Finds 2 rows in the factor with the same values of the other variables and summarizes them.
 		for(int rows1=0;rows1<stop;rows1++)
 		{
 			String[] newRow = new String [factor.getHeaderColumns().size()+1];
 			double sumProb = factor.RowProb(factor.iloc(rows1));
+			int count = 0;
 			for(int nextRows=rows1+1;nextRows<factor.getTable().size();nextRows++) 
 			{
 				for( int c=0;c<factor.getHeaderColumns().size();c++)
 				{
 					if(!factor.iloc(rows1)[c].equals(factor.iloc(nextRows)[c])) break;
-					int col_num=0;
+					int col_num=0;// the current column in the new row.
 					if(c==factor.getHeaderColumns().size()-1)
 					{
-						//						if(flag) {stop = nextRows; flag = false;}
 						for(c=0;c<factor.getHeaderColumns().size();c++) { 
 							newRow[col_num]=factor.iloc(rows1)[c];
 							col_num++;
 						}
 						sumProb += factor.RowProb(nextRows);
-						this.numOfAdd++;
+						count++;
 					}
-
 				}
 			}
-			if(sumProb != factor.RowProb(factor.iloc(rows1))) {
+			//if the sum of probabilities has changed and has not been added to the new factor.
+			if(sumProb != factor.RowProb(factor.iloc(rows1)) && !alreadyAdd(newRow,returnFactor)) {
 				returnFactor.addRow(newRow);
 				returnFactor.setRowProb(returnFactor.getRowsNumber()-1, sumProb);
+				this.numOfAdd += count;
 			}
 		}
-		//		this.numOfAdd += returnFactor.getRowsNumber();
-
 		if(this.printActions) System.out.println("eliminate " +variable+" from "+returnFactor.getId()+"\n" + returnFactor.toString() + "\nnumOfAdd=" +this.numOfAdd + "\tnumOfMul= "+this.numOfMul +"\n______________________________________\n");
 		return returnFactor;
 	}
-	private void normalize(Factor factor) {
-
-		double sum = factor.RowProb(0);
-		for (int i = 1; i < factor.getRowsNumber(); i++) {
-			sum += factor.RowProb(i);			
+	
+	/**
+	 * Checks if a row with the same value has been added to the new factor
+	 * @param newRow represents the new row we want to add to to the new factor
+	 * @param returnFactor represents the new factor to be checked.
+	 * @return True if the row has been added to the factor, otherwise returns False.
+	 */
+	private boolean alreadyAdd(String[] newRow, Factor returnFactor) {
+		boolean found=false;
+		boolean equalRow = false;
+		for(int r=0;r<returnFactor.getRowsNumber() && !found;r++) 
+		{
+			equalRow = true;
+			for( int c=0;c<returnFactor.getHeaderColumns().size();c++)
+			{
+				if(!returnFactor.iloc(r)[c].equals(newRow[c])) equalRow = false;
+			}
+			if(equalRow) found = true;
 		}
-		if(sum != 1) {
+		return found;
+	}
+
+	/**
+	 * Normalize the result factor.
+	 * @param factor represents the factor that has to be normalized
+	 */
+	private void normalize(Factor factor) {
+		if(this.firstJoin) {
+			double sum = factor.RowProb(0);
+			for (int i = 1; i < factor.getRowsNumber(); i++) {
+				sum += factor.RowProb(i);			
+			}
 			this.numOfAdd += factor.getRowsNumber()-1; //we initialized the sum to be the first row probability and start to sum the probabilities from the second row
 			for(int i=0;i<factor.getTable().size();i++) {
 				factor.setRowProb(i,factor.RowProb(i)/sum);
@@ -450,6 +559,10 @@ public class VariableElimination {
 			if(this.printActions) System.out.println("normalize for "+factor.getId()+"\n" + factor.toString()+ "\nnumOfAdd=" +this.numOfAdd + "\tnumOfMul= "+this.numOfMul +"\n______________________________________\n");
 		}
 	}
+	
+	/**
+	 * Represents the Query and the factors as a string.
+	 */
 	public String toString() {
 		StringBuilder SB = new StringBuilder();
 		SB.append("Query:" + this.Q + "\nEvidence:");
